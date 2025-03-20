@@ -531,7 +531,9 @@ While React SPAs present unique SEO challenges, implementing server-side renderi
     
     const author: Author = {
       id,
-      ...insertAuthor
+      name: insertAuthor.name,
+      bio: insertAuthor.bio || null,
+      avatarUrl: insertAuthor.avatarUrl || null
     };
     
     this.authors.set(id, author);

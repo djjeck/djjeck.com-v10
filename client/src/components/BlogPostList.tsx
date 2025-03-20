@@ -1,0 +1,153 @@
+import { useState } from "react";
+import { Post } from "@shared/schema";
+import BlogPostCard from "./BlogPostCard";
+import { Filter, ArrowRightFromLine } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { 
+  DropdownMenu, 
+  DropdownMenuContent, 
+  DropdownMenuItem, 
+  DropdownMenuTrigger 
+} from "@/components/ui/dropdown-menu";
+
+interface BlogPostListProps {
+  posts: Post[];
+  isLoading: boolean;
+  loadMore?: () => void;
+  hasMore?: boolean;
+}
+
+type SortOption = "newest" | "oldest" | "readTime";
+
+const BlogPostList = ({ 
+  posts, 
+  isLoading, 
+  loadMore, 
+  hasMore = false 
+}: BlogPostListProps) => {
+  const [sortOption, setSortOption] = useState<SortOption>("newest");
+
+  const sortedPosts = [...posts].sort((a, b) => {
+    switch (sortOption) {
+      case "newest":
+        return new Date(b.publishedAt).getTime() - new Date(a.publishedAt).getTime();
+      case "oldest":
+        return new Date(a.publishedAt).getTime() - new Date(b.publishedAt).getTime();
+      case "readTime":
+        return a.readTime - b.readTime;
+      default:
+        return 0;
+    }
+  });
+
+  if (isLoading) {
+    return (
+      <section className="py-12 bg-white" id="featured">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="md:flex md:items-center md:justify-between mb-8">
+            <h2 className="text-2xl font-bold text-gray-900">Latest Articles</h2>
+          </div>
+          <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
+            {[1, 2, 3].map((i) => (
+              <div 
+                key={i} 
+                className="bg-white rounded-lg overflow-hidden shadow-md p-4 h-96 animate-pulse"
+              >
+                <div className="w-full h-48 bg-gray-200 rounded mb-4"></div>
+                <div className="h-6 bg-gray-200 rounded w-3/4 mb-4"></div>
+                <div className="h-4 bg-gray-200 rounded w-full mb-2"></div>
+                <div className="h-4 bg-gray-200 rounded w-full mb-2"></div>
+                <div className="h-4 bg-gray-200 rounded w-2/3 mb-4"></div>
+                <div className="flex items-center">
+                  <div className="h-8 w-8 bg-gray-200 rounded-full mr-2"></div>
+                  <div className="h-4 bg-gray-200 rounded w-1/4"></div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+    );
+  }
+
+  if (posts.length === 0) {
+    return (
+      <section className="py-12 bg-white" id="featured">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="md:flex md:items-center md:justify-between mb-8">
+            <h2 className="text-2xl font-bold text-gray-900">Latest Articles</h2>
+          </div>
+          <div className="flex flex-col items-center justify-center py-12">
+            <p className="text-gray-500 mb-4">No articles found</p>
+          </div>
+        </div>
+      </section>
+    );
+  }
+
+  return (
+    <section className="py-12 bg-white" id="featured">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="md:flex md:items-center md:justify-between mb-8">
+          <h2 className="text-2xl font-bold text-gray-900">Latest Articles</h2>
+          <div className="mt-4 md:mt-0 flex space-x-3">
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" className="flex items-center gap-2">
+                  <ArrowRightFromLine className="h-5 w-5 rotate-90" />
+                  Sort
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem onClick={() => setSortOption("newest")}>
+                  Newest First
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setSortOption("oldest")}>
+                  Oldest First
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setSortOption("readTime")}>
+                  Reading Time
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+            
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" className="flex items-center gap-2">
+                  <Filter className="h-5 w-5" />
+                  Filter
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem>All Posts</DropdownMenuItem>
+                <DropdownMenuItem>Technology</DropdownMenuItem>
+                <DropdownMenuItem>Design</DropdownMenuItem>
+                <DropdownMenuItem>DevOps</DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
+        </div>
+
+        <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
+          {sortedPosts.map((post) => (
+            <BlogPostCard key={post.id} post={post} />
+          ))}
+        </div>
+
+        {loadMore && hasMore && (
+          <div className="mt-12 flex justify-center">
+            <Button
+              variant="outline"
+              className="px-6 py-3 border border-primary text-primary bg-white hover:bg-blue-50"
+              onClick={loadMore}
+            >
+              Load More Articles
+            </Button>
+          </div>
+        )}
+      </div>
+    </section>
+  );
+};
+
+export default BlogPostList;

@@ -48,51 +48,54 @@ export class MemStorage implements IStorage {
     this.authorIdCounter = 1;
     
     // Initialize with sample data
-    this.initSampleData();
+    // We need to use a Promise here since constructors can't be async
+    (async () => {
+      await this.initSampleData();
+    })();
   }
 
   // Initialize sample data
-  private initSampleData() {
+  private async initSampleData() {
     // Create authors
-    const author1 = this.createAuthor({
+    const author1 = await this.createAuthor({
       name: "Jane Smith",
       bio: "UI/UX Designer with 6+ years of experience in creating intuitive digital interfaces for web and mobile platforms.",
-      avatar: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?ixlib=rb-1.2.1&auto=format&fit=crop&w=250&q=80"
+      avatarUrl: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?ixlib=rb-1.2.1&auto=format&fit=crop&w=250&q=80"
     });
     
-    const author2 = this.createAuthor({
+    const author2 = await this.createAuthor({
       name: "Michael Wong",
       bio: "Full-stack developer and DevOps specialist who loves building scalable applications.",
-      avatar: "https://images.unsplash.com/photo-1599566150163-29194dcaad36?ixlib=rb-1.2.1&auto=format&fit=crop&w=250&q=80"
+      avatarUrl: "https://images.unsplash.com/photo-1599566150163-29194dcaad36?ixlib=rb-1.2.1&auto=format&fit=crop&w=250&q=80"
     });
     
-    const author3 = this.createAuthor({
+    const author3 = await this.createAuthor({
       name: "Alex Johnson",
       bio: "Technical writer and developer advocate with a passion for making complex topics accessible to everyone.",
-      avatar: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-1.2.1&auto=format&fit=crop&w=250&q=80"
+      avatarUrl: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-1.2.1&auto=format&fit=crop&w=250&q=80"
     });
     
     // Create categories
-    const techCategory = this.createCategory({
+    const techCategory = await this.createCategory({
       name: "Tech",
       slug: "tech",
       description: "Latest technology news, programming, and development trends"
     });
     
-    const designCategory = this.createCategory({
+    const designCategory = await this.createCategory({
       name: "Design",
       slug: "design",
       description: "UI/UX design tips, tools, and best practices"
     });
     
-    const devOpsCategory = this.createCategory({
+    const devOpsCategory = await this.createCategory({
       name: "DevOps",
       slug: "devops",
       description: "Continuous integration, deployment, and operations best practices"
     });
     
     // Create posts
-    this.createPost({
+    await this.createPost({
       title: "Getting Started with React and TypeScript",
       slug: "getting-started-with-react-and-typescript",
       excerpt: "TypeScript adds static typing to JavaScript, making it easier to catch errors early. Learn how to use TypeScript with React for more robust applications...",
@@ -197,7 +200,7 @@ By using TypeScript with React, you'll create more maintainable applications wit
       tags: ["react", "typescript", "javascript", "web development"]
     });
     
-    this.createPost({
+    await this.createPost({
       title: "Responsive Design Principles for Modern Web Apps",
       slug: "responsive-design-principles-for-modern-web-apps",
       excerpt: "Creating websites that work well on any device is crucial. Learn essential responsive design principles and techniques to ensure your sites adapt to any screen size...",
@@ -338,7 +341,7 @@ Responsive design isn't just about adjusting layouts for different screen sizesâ
       tags: ["responsive design", "ux design", "mobile", "web design"]
     });
     
-    this.createPost({
+    await this.createPost({
       title: "SEO Fundamentals for React Single Page Applications",
       slug: "seo-fundamentals-for-react-single-page-applications",
       excerpt: "SPAs face unique SEO challenges. This guide covers meta tags, server-side rendering, sitemaps, and other critical optimizations for better visibility...",
@@ -463,12 +466,21 @@ While React SPAs present unique SEO challenges, implementing server-side renderi
   
   async createPost(insertPost: InsertPost): Promise<Post> {
     const id = this.postIdCounter++;
+    const author = await this.getAuthorById(insertPost.authorId);
+    const category = await this.getCategoryById(insertPost.categoryId);
+    
+    if (!author || !category) {
+      throw new Error(`Author or category not found for post ${insertPost.title}`);
+    }
     
     const post: Post = {
       id,
       ...insertPost,
-      author: await this.getAuthorById(insertPost.authorId) as Author,
-      category: await this.getCategoryById(insertPost.categoryId) as Category
+      isFeatured: insertPost.isFeatured || false,
+      readTime: insertPost.readTime || 5,
+      tags: insertPost.tags || [],
+      author,
+      category
     };
     
     this.posts.set(id, post);
@@ -495,7 +507,10 @@ While React SPAs present unique SEO challenges, implementing server-side renderi
     
     const category: Category = {
       id,
-      ...insertCategory
+      slug: insertCategory.slug,
+      name: insertCategory.name,
+      description: insertCategory.description || null,
+      image: insertCategory.image || null
     };
     
     this.categories.set(id, category);

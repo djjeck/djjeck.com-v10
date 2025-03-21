@@ -679,10 +679,16 @@ While React SPAs present unique SEO challenges, implementing server-side renderi
       throw new Error(`Post ${post.id} has invalid relations`);
     }
     
+    // Get post images
+    const images = Array.from(this.postImages.values())
+      .filter(image => image.postId === post.id)
+      .sort((a, b) => (a.displayOrder || 0) - (b.displayOrder || 0));
+    
     return {
       ...post,
       author,
-      category
+      category,
+      images: images.length > 0 ? images : undefined
     };
   }
 }
@@ -690,6 +696,56 @@ While React SPAs present unique SEO challenges, implementing server-side renderi
 // Database storage implementation
 export class DatabaseStorage implements IStorage {
   sessionStore: session.Store;
+  
+  // Post image methods
+  async getPostImages(postId: number): Promise<PostImage[]> {
+    try {
+      const images = await db.query.postImages.findMany({
+        where: eq(postImages.postId, postId),
+        orderBy: [postImages.displayOrder]
+      });
+      return images;
+    } catch (error) {
+      console.error(`Error getting images for post ${postId}:`, error);
+      return [];
+    }
+  }
+  
+  async createPostImage(postImage: InsertPostImage): Promise<PostImage> {
+    try {
+      const [image] = await db.insert(postImages)
+        .values(postImage)
+        .returning();
+      return image;
+    } catch (error) {
+      console.error('Error creating post image:', error);
+      throw new Error('Failed to create post image');
+    }
+  }
+  
+  async updatePostImage(id: number, postImage: Partial<InsertPostImage>): Promise<PostImage | undefined> {
+    try {
+      const [updatedImage] = await db.update(postImages)
+        .set(postImage)
+        .where(eq(postImages.id, id))
+        .returning();
+      return updatedImage;
+    } catch (error) {
+      console.error(`Error updating post image ${id}:`, error);
+      return undefined;
+    }
+  }
+  
+  async deletePostImage(id: number): Promise<boolean> {
+    try {
+      await db.delete(postImages)
+        .where(eq(postImages.id, id));
+      return true;
+    } catch (error) {
+      console.error(`Error deleting post image ${id}:`, error);
+      return false;
+    }
+  }
   
   constructor() {
     this.sessionStore = new PostgresSessionStore({ 

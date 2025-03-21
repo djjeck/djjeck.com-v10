@@ -5,13 +5,21 @@ import {
   Category, 
   InsertAuthor, 
   Author,
+  InsertUser,
+  User,
   posts,
   categories,
-  authors
+  authors,
+  users
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc } from "drizzle-orm";
 import * as schema from "@shared/schema";
+import session from "express-session";
+import connectPg from "connect-pg-simple";
+import { pool } from "./db";
+
+const PostgresSessionStore = connectPg(session);
 
 export interface IStorage {
   // Post operations
@@ -21,6 +29,8 @@ export interface IStorage {
   getPostsByCategory(categorySlug: string): Promise<Post[]>;
   getFeaturedPost(): Promise<Post | undefined>;
   createPost(post: InsertPost): Promise<Post>;
+  updatePost(id: number, post: Partial<InsertPost>): Promise<Post | undefined>;
+  deletePost(id: number): Promise<boolean>;
   
   // Category operations
   getAllCategories(): Promise<Category[]>;
@@ -32,6 +42,14 @@ export interface IStorage {
   getAllAuthors(): Promise<Author[]>;
   getAuthorById(id: number): Promise<Author | undefined>;
   createAuthor(author: InsertAuthor): Promise<Author>;
+  
+  // User operations
+  getUser(id: number): Promise<User | undefined>;
+  getUserByUsername(username: string): Promise<User | undefined>;
+  createUser(user: InsertUser): Promise<User>;
+  
+  // Session store for authentication
+  sessionStore: session.Store;
 }
 
 // In-memory storage implementation
@@ -565,7 +583,14 @@ While React SPAs present unique SEO challenges, implementing server-side renderi
 
 // Database storage implementation
 export class DatabaseStorage implements IStorage {
+  sessionStore: session.Store;
+  
   constructor() {
+    this.sessionStore = new PostgresSessionStore({ 
+      pool, 
+      createTableIfMissing: true 
+    });
+    
     // Initialize with sample data
     // We need to use a Promise here since constructors can't be async
     (async () => {

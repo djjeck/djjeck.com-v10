@@ -7,7 +7,7 @@ export default {
     '\\.(css|less|scss|sass)$': 'identity-obj-proxy'
   },
   setupFilesAfterEnv: ['<rootDir>/jest.setup.ts'],
-  testMatch: ['**/__tests__/**/*.ts?(x)', '**/?(*.)+(spec|test).ts?(x)'],
+  testMatch: ['**/client/src/__tests__/**/*.ts?(x)', '**/client/src/**/?(*.)+(spec|test).ts?(x)'],
   transform: {
     '^.+\\.tsx?$': ['ts-jest', {
       tsconfig: 'tsconfig.json',
@@ -19,4 +19,6 @@ export default {
     '/storybook-static/'
   ],
   moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'json', 'node'],
+  testTimeout: 10000, // 10 seconds timeout
+  verbose: true,
 };

@@ -1,0 +1,19 @@
+{
+  "workflow": {
+    "name": "Direct Start",
+    "author": "agent",
+    "metadata": {
+      "agentRequireRestartOnSave": false
+    },
+    "tasks": [
+      {
+        "task": "packager.installForAll"
+      },
+      {
+        "task": "shell.exec",
+        "args": "node start-dev-server.js",
+        "waitForPort": 5000
+      }
+    ]
+  }
+}

@@ -1,0 +1,1 @@
+name = "Run Server Only"\ncommand = "npx tsx server/index.ts"

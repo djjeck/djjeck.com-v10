@@ -1,5 +1,5 @@
 {
-  "include": ["client/src/**/*", "shared/**/*", "server/**/*", "stories/**/*", "client/src/__tests__/**/*", "jest.setup.ts"],
+  "include": ["client/src/**/*", "shared/**/*", "server/**/*", "client/src/__tests__/**/*", "jest.setup.ts"],
   "exclude": ["node_modules", "build", "dist"],
   "compilerOptions": {
     "incremental": true,

@@ -1,13 +1,14 @@
 #!/bin/bash
 
-echo "Running simple Jest test..."
-# Run only the simple.test.ts file with --no-cache and verbose output
-NODE_ENV=test npx jest client/src/__tests__/simple.test.ts --no-cache --verbose
+echo "Running simple tests without component dependencies..."
+
+# Run the test with the minimal configuration and explicit path
+NODE_ENV=test NODE_OPTIONS="--experimental-vm-modules" npx jest ./simple.test.js --no-cache --testMatch="**/*.test.js"
 
 if [ $? -eq 0 ]; then
-  echo "Simple test passed!"
+  echo "Simple tests passed successfully!"
   exit 0
 else
-  echo "Simple test failed!"
+  echo "Simple tests failed!"
   exit 1
 fi

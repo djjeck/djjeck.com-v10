@@ -1,11 +1,15 @@
+
 #!/bin/bash
 
 # This script runs our Storybook tests
 echo "Running Storybook tests..."
 
+# Get the directory where the script is located
+SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+
 # First, run the component tests
 echo "Checking component structure..."
-node test-components.js
+node "$SCRIPT_DIR/test-components.js"
 
 if [ $? -ne 0 ]; then
   echo "Component tests failed!"
@@ -14,7 +18,7 @@ fi
 
 # Check if Storybook can build without errors
 echo "Checking if Storybook can build..."
-./build-storybook.sh
+"$SCRIPT_DIR/build-storybook.sh"
 
 if [ $? -ne 0 ]; then
   echo "Storybook build failed!"

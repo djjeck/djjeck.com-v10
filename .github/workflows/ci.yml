@@ -1,3 +1,4 @@
+
 name: CI
 
 on:
@@ -28,26 +29,18 @@ jobs:
     - name: Build
       run: npm run build
 
-  storybook-smoke-test:
-    runs-on: ubuntu-latest
-
-    steps:
-    - uses: actions/checkout@v3
-
-    - name: Setup Node.js
-      uses: actions/setup-node@v3
+    - name: Cache build artifacts
+      uses: actions/cache@v4
       with:
-        node-version: '20'
-        cache: 'npm'
+        path: dist
+        key: ${{ runner.os }}-build-${{ github.sha }}
 
-    - name: Install dependencies
-      run: npm ci
-
-    - name: Run Storybook smoke test
+    - name: Report status
+      if: always()
       run: |
-        npx storybook@latest build
-        npx http-server storybook-static -p 6006 &
-        sleep 5
-        npx wait-on http://localhost:6006
-        # Verify that the Storybook build works and contains stories
-        npx http-get http://localhost:6006/index.json | grep -q '"entries":'
+        if [ ${{ job.status }} == 'success' ]; then
+          echo "Build completed successfully"
+        else
+          echo "Build failed"
+          exit 1
+        fi

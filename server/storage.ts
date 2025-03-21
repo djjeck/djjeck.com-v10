@@ -1277,15 +1277,9 @@ While React SPAs present unique SEO challenges, implementing server-side renderi
       
       if (!result) return undefined;
       
-      // Fetch post images
-      const images = await this.getPostImages(result.id);
+      // Use helper method to get post with images
+      return this.getPostWithRelations(result);
       
-      return {
-        ...result,
-        author: result.author,
-        category: result.category,
-        images: images
-      };
     } catch (error) {
       console.error("Error getting featured post:", error);
       return undefined;

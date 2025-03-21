@@ -68,6 +68,13 @@ const ExpandedBlogPost = ({ post }: ExpandedBlogPostProps) => {
         </div>
       ) : null}
       
+      {/* Debugging info - remove after testing */}
+      {post.images && (
+        <div className="text-xs text-gray-500 mb-2">
+          Images: {post.images.length > 0 ? `${post.images.length} found` : 'None found'}
+        </div>
+      )}
+      
       {/* Excerpt for preview */}
       <div className="text-gray-600 text-lg mb-4">
         {post.excerpt}

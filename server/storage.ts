@@ -33,6 +33,12 @@ export interface IStorage {
   updatePost(id: number, post: Partial<InsertPost>): Promise<Post | undefined>;
   deletePost(id: number): Promise<boolean>;
   
+  // Post image operations
+  getPostImages(postId: number): Promise<PostImage[]>;
+  createPostImage(postImage: InsertPostImage): Promise<PostImage>;
+  updatePostImage(id: number, postImage: Partial<InsertPostImage>): Promise<PostImage | undefined>;
+  deletePostImage(id: number): Promise<boolean>;
+  
   // Category operations
   getAllCategories(): Promise<Category[]>;
   getCategoryById(id: number): Promise<Category | undefined>;
@@ -59,11 +65,13 @@ export class MemStorage implements IStorage {
   private categories: Map<number, Category>;
   private authors: Map<number, Author>;
   private users: Map<number, User>;
+  private postImages: Map<number, PostImage>;
   
   private postIdCounter: number;
   private categoryIdCounter: number;
   private authorIdCounter: number;
   private userIdCounter: number;
+  private postImageIdCounter: number;
   
   sessionStore: session.Store;
   

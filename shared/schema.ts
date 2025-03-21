@@ -75,6 +75,7 @@ export type InsertPost = z.infer<typeof insertPostSchema>;
 export type Post = typeof posts.$inferSelect & {
   author: Author;
   category: Category;
+  images?: PostImage[];
 };
 
 // Contact form schema
@@ -96,6 +97,26 @@ export const newsletterSchema = z.object({
 export type NewsletterSubscription = z.infer<typeof newsletterSchema>;
 export const insertNewsletterSchema = newsletterSchema;
 
+// Post images table
+export const postImages = pgTable("post_images", {
+  id: serial("id").primaryKey(),
+  postId: integer("post_id").notNull().references(() => posts.id),
+  imageUrl: text("image_url").notNull(),
+  caption: text("caption"),
+  displayOrder: integer("display_order").default(0), // For ordering images in the carousel
+});
+
+export const postImagesRelations = relations(postImages, ({ one }) => ({
+  post: one(posts, {
+    fields: [postImages.postId],
+    references: [posts.id]
+  })
+}));
+
+export const insertPostImageSchema = createInsertSchema(postImages);
+export type InsertPostImage = z.infer<typeof insertPostImageSchema>;
+export type PostImage = typeof postImages.$inferSelect;
+
 // Define all relations after all table definitions to avoid circular dependencies
 export const authorsRelations = relations(authors, ({ many }) => ({
   posts: many(posts),
@@ -103,4 +124,8 @@ export const authorsRelations = relations(authors, ({ many }) => ({
 
 export const categoriesRelations = relations(categories, ({ many }) => ({
   posts: many(posts),
+}));
+
+export const postsRelationsWithImages = relations(posts, ({ many }) => ({
+  images: many(postImages)
 }));

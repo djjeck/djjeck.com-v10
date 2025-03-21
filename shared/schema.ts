@@ -1,6 +1,7 @@
 import { pgTable, text, serial, integer, boolean, timestamp } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
+import { relations } from "drizzle-orm";
 
 // Users table (from the original schema)
 export const users = pgTable("users", {
@@ -50,13 +51,24 @@ export const posts = pgTable("posts", {
   excerpt: text("excerpt").notNull(),
   content: text("content").notNull(),
   publishedAt: text("published_at").notNull(),
-  authorId: integer("author_id").notNull(),
-  categoryId: integer("category_id").notNull(),
+  authorId: integer("author_id").notNull().references(() => authors.id),
+  categoryId: integer("category_id").notNull().references(() => categories.id),
   coverImage: text("cover_image").notNull(),
   isFeatured: boolean("is_featured").default(false),
   readTime: integer("read_time").default(5),
   tags: text("tags").array(),
 });
+
+export const postsRelations = relations(posts, ({ one }) => ({
+  author: one(authors, {
+    fields: [posts.authorId],
+    references: [authors.id]
+  }),
+  category: one(categories, {
+    fields: [posts.categoryId],
+    references: [categories.id]
+  })
+}));
 
 export const insertPostSchema = createInsertSchema(posts);
 export type InsertPost = z.infer<typeof insertPostSchema>;
@@ -83,3 +95,12 @@ export const newsletterSchema = z.object({
 
 export type NewsletterSubscription = z.infer<typeof newsletterSchema>;
 export const insertNewsletterSchema = newsletterSchema;
+
+// Define all relations after all table definitions to avoid circular dependencies
+export const authorsRelations = relations(authors, ({ many }) => ({
+  posts: many(posts),
+}));
+
+export const categoriesRelations = relations(categories, ({ many }) => ({
+  posts: many(posts),
+}));

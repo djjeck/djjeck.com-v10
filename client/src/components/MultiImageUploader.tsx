@@ -58,9 +58,9 @@ export default function MultiImageUploader({
       
       const data = await response.json();
       
-      // Add the new image to the list
+      // Add the new image to the list with temporary negative ID to avoid conflicts
       const newImage: PostImage = {
-        id: 0, // Temporary ID until saved
+        id: -(images.length + 1), // Temporary negative ID until saved (to avoid conflicts)
         postId: postId || 0,
         imageUrl: data.imageUrl,
         caption: "",

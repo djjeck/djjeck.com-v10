@@ -713,6 +713,20 @@ While React SPAs present unique SEO challenges, implementing server-side renderi
 // Database storage implementation
 export class DatabaseStorage implements IStorage {
   sessionStore: session.Store;
+
+  // Helper method to fetch post with images and handle relations
+  private async getPostWithRelations(post: any): Promise<Post> {
+    if (!post) return post;
+    
+    // Fetch post images
+    const images = await this.getPostImages(post.id);
+    
+    // Return post with populated relations (author and category should already be populated by the query)
+    return {
+      ...post,
+      images
+    } as Post;
+  }
   
   // Post image methods
   async getPostImages(postId: number): Promise<PostImage[]> {
@@ -1171,17 +1185,9 @@ While React SPAs present unique SEO challenges, implementing server-side renderi
         offset: offset
       });
       
-      // Get images for each post
+      // Get images for each post and apply relations
       const postsWithImages = await Promise.all(
-        result.map(async (post) => {
-          const images = await this.getPostImages(post.id);
-          return {
-            ...post,
-            author: post.author,
-            category: post.category,
-            images: images
-          };
-        })
+        result.map(async (post) => this.getPostWithRelations(post))
       );
       
       return postsWithImages;
@@ -1203,15 +1209,9 @@ While React SPAs present unique SEO challenges, implementing server-side renderi
       
       if (!result) return undefined;
       
-      // Fetch post images
-      const images = await this.getPostImages(id);
+      // Use helper method to get post with images
+      return this.getPostWithRelations(result);
       
-      return {
-        ...result,
-        author: result.author,
-        category: result.category,
-        images: images
-      };
     } catch (error) {
       console.error(`Error getting post by ID ${id}:`, error);
       return undefined;
@@ -1230,15 +1230,9 @@ While React SPAs present unique SEO challenges, implementing server-side renderi
       
       if (!result) return undefined;
       
-      // Fetch post images
-      const images = await this.getPostImages(result.id);
+      // Use helper method to get post with images
+      return this.getPostWithRelations(result);
       
-      return {
-        ...result,
-        author: result.author,
-        category: result.category,
-        images: images
-      };
     } catch (error) {
       console.error(`Error getting post by slug ${slug}:`, error);
       return undefined;
@@ -1259,17 +1253,9 @@ While React SPAs present unique SEO challenges, implementing server-side renderi
         orderBy: [desc(posts.publishedAt)]
       });
       
-      // Get images for each post
+      // Get images for each post and apply relations
       const postsWithImages = await Promise.all(
-        result.map(async (post) => {
-          const images = await this.getPostImages(post.id);
-          return {
-            ...post,
-            author: post.author,
-            category: post.category,
-            images: images
-          };
-        })
+        result.map(async (post) => this.getPostWithRelations(post))
       );
       
       return postsWithImages;

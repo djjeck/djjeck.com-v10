@@ -351,13 +351,13 @@ export default function PostEditor() {
                       {/* Featured */}
                       <FormField
                         control={form.control}
-                        name="featured"
+                        name="isFeatured"
                         render={({ field }) => (
                           <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
                             <FormControl>
                               <input
                                 type="checkbox"
-                                checked={field.value}
+                                checked={field.value as boolean}
                                 onChange={field.onChange}
                                 className="h-4 w-4 mt-1"
                               />

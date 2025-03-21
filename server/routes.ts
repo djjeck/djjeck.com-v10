@@ -8,9 +8,10 @@ import {
   insertContactFormSchema
 } from "@shared/schema";
 import { z } from "zod";
-import { setupAuth } from "./auth";
+import { setupAuth, upload } from "./auth";
 import path from "path";
 import fs from "fs";
+import { z } from "zod";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Setup authentication and protected routes

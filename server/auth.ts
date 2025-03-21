@@ -1,32 +1,31 @@
 import passport from "passport";
 import { Strategy as LocalStrategy } from "passport-local";
-import { Express } from "express";
+import { Express, Request, Response, NextFunction } from "express";
 import session from "express-session";
 import { scrypt, randomBytes, timingSafeEqual } from "crypto";
 import { promisify } from "util";
 import { storage } from "./storage";
-import { User as SelectUser } from "@shared/schema";
+import { User } from "@shared/schema";
 import multer from "multer";
-import path from "path";
 import { v4 as uuidv4 } from "uuid";
+import * as path from "path";
+import * as fs from "fs";
 
-declare global {
-  namespace Express {
-    interface User extends SelectUser {}
-  }
+// Ensure uploads directory exists
+const uploadsDir = path.join(process.cwd(), "public", "uploads");
+if (!fs.existsSync(uploadsDir)) {
+  fs.mkdirSync(uploadsDir, { recursive: true });
 }
-
-const scryptAsync = promisify(scrypt);
 
 // Configure multer for file uploads
 const storage_config = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, path.join(process.cwd(), 'public', 'uploads'));
+  destination: (_req, _file, cb) => {
+    cb(null, uploadsDir);
   },
-  filename: (req, file, cb) => {
-    const uniqueFilename = `${uuidv4()}${path.extname(file.originalname)}`;
-    cb(null, uniqueFilename);
-  }
+  filename: (_req, file, cb) => {
+    const uniqueName = `${uuidv4()}${path.extname(file.originalname)}`;
+    cb(null, uniqueName);
+  },
 });
 
 export const upload = multer({ 
@@ -34,39 +33,52 @@ export const upload = multer({
   limits: {
     fileSize: 5 * 1024 * 1024, // 5MB limit
   },
-  fileFilter: (req, file, cb) => {
-    const allowedMimeTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
-    if (allowedMimeTypes.includes(file.mimetype)) {
-      cb(null, true);
-    } else {
-      cb(new Error('Invalid file type. Only JPEG, PNG, GIF, and WebP are allowed.'));
+  fileFilter: (_req, file, cb) => {
+    // Accept images only
+    if (!file.originalname.match(/\.(jpg|jpeg|png|gif)$/i)) {
+      return cb(new Error("Only image files are allowed!"));
     }
+    cb(null, true);
   }
 });
 
-export async function hashPassword(password: string) {
+declare global {
+  namespace Express {
+    // Define User interface for Express
+    interface User {
+      id: number;
+      username: string;
+      password?: string;
+      // Add any additional user properties needed by the application
+    }
+  }
+}
+
+const scryptAsync = promisify(scrypt);
+
+export async function hashPassword(password: string): Promise<string> {
   const salt = randomBytes(16).toString("hex");
   const buf = (await scryptAsync(password, salt, 64)) as Buffer;
   return `${buf.toString("hex")}.${salt}`;
 }
 
-export async function comparePasswords(supplied: string, stored: string) {
+export async function comparePasswords(supplied: string, stored: string): Promise<boolean> {
   const [hashed, salt] = stored.split(".");
   const hashedBuf = Buffer.from(hashed, "hex");
   const suppliedBuf = (await scryptAsync(supplied, salt, 64)) as Buffer;
   return timingSafeEqual(hashedBuf, suppliedBuf);
 }
 
-export function setupAuth(app: Express) {
+export function setupAuth(app: Express): void {
   const sessionSettings: session.SessionOptions = {
-    secret: process.env.SESSION_SECRET || "blog-admin-secret-key",
+    secret: process.env.SESSION_SECRET || "supersecretkey", // In production, use environment variable
     resave: false,
     saveUninitialized: false,
-    store: storage.sessionStore,
     cookie: {
       secure: process.env.NODE_ENV === "production",
-      maxAge: 24 * 60 * 60 * 1000 // 1 day
-    }
+      maxAge: 24 * 60 * 60 * 1000, // 24 hours
+    },
+    store: storage.sessionStore,
   };
 
   app.set("trust proxy", 1);
@@ -74,22 +86,33 @@ export function setupAuth(app: Express) {
   app.use(passport.initialize());
   app.use(passport.session());
 
+  // Local Strategy for username/password login
   passport.use(
-    new LocalStrategy(async (username, password, done) => {
+    new LocalStrategy(async (username: string, password: string, done) => {
       try {
         const user = await storage.getUserByUsername(username);
-        if (!user || !(await comparePasswords(password, user.password))) {
-          return done(null, false);
-        } else {
-          return done(null, user);
+        if (!user) {
+          return done(null, false, { message: "Incorrect username or password" });
         }
+
+        const isPasswordValid = await comparePasswords(password, user.password);
+        if (!isPasswordValid) {
+          return done(null, false, { message: "Incorrect username or password" });
+        }
+
+        return done(null, user);
       } catch (error) {
         return done(error);
       }
-    }),
+    })
   );
 
-  passport.serializeUser((user, done) => done(null, user.id));
+  // Serialize user ID to session
+  passport.serializeUser((user, done) => {
+    done(null, user.id);
+  });
+
+  // Deserialize user from session ID
   passport.deserializeUser(async (id: number, done) => {
     try {
       const user = await storage.getUser(id);
@@ -99,8 +122,16 @@ export function setupAuth(app: Express) {
     }
   });
 
-  // Auth routes
-  app.post("/api/register", async (req, res, next) => {
+  // Authentication Middleware
+  function isAuthenticated(req: Request, res: Response, next: NextFunction) {
+    if (req.isAuthenticated()) {
+      return next();
+    }
+    res.status(401).json({ error: "Not authenticated" });
+  }
+
+  // Register a new user
+  app.post("/api/register", async (req: Request, res: Response, next: NextFunction) => {
     try {
       // Check if user already exists
       const existingUser = await storage.getUserByUsername(req.body.username);
@@ -108,167 +139,70 @@ export function setupAuth(app: Express) {
         return res.status(400).json({ error: "Username already exists" });
       }
 
+      // Create new user with hashed password
       const hashedPassword = await hashPassword(req.body.password);
-      
       const user = await storage.createUser({
         username: req.body.username,
         password: hashedPassword,
       });
 
+      // Create a new object without the password
+      const { password, ...userWithoutPassword } = user;
+
+      // Log in the newly registered user
       req.login(user, (err) => {
         if (err) return next(err);
-        // Don't send password back to client
-        const { password, ...userWithoutPassword } = user;
-        res.status(201).json(userWithoutPassword);
+        return res.status(201).json(userWithoutPassword);
       });
     } catch (error) {
-      console.error("Registration error:", error);
-      res.status(500).json({ error: "Failed to register user" });
+      next(error);
     }
   });
 
-  app.post("/api/login", (req, res, next) => {
-    passport.authenticate("local", (err, user, info) => {
+  // Login route
+  app.post("/api/login", (req: Request, res: Response, next: NextFunction) => {
+    passport.authenticate("local", (err: any, user: Express.User | false, info: { message: string } | undefined) => {
       if (err) return next(err);
       if (!user) {
-        return res.status(401).json({ error: "Invalid username or password" });
+        return res.status(401).json({ error: info?.message || "Login failed" });
       }
-      
+
       req.login(user, (err) => {
         if (err) return next(err);
-        // Don't send password back to client
+
+        // Create a new object without the password
         const { password, ...userWithoutPassword } = user;
-        res.json(userWithoutPassword);
+
+        return res.json(userWithoutPassword);
       });
     })(req, res, next);
   });
 
-  app.post("/api/logout", (req, res, next) => {
+  // Logout route
+  app.post("/api/logout", (req: Request, res: Response, next: NextFunction) => {
     req.logout((err) => {
       if (err) return next(err);
-      res.status(200).json({ message: "Logged out successfully" });
+      res.sendStatus(200);
     });
   });
 
-  app.get("/api/user", (req, res) => {
+  // Get current user
+  app.get("/api/user", (req: Request, res: Response) => {
     if (!req.isAuthenticated()) {
       return res.status(401).json({ error: "Not authenticated" });
     }
-    // Don't send password back to client
-    const { password, ...userWithoutPassword } = req.user;
+
+    // Create a new object without the password
+    const { password, ...userWithoutPassword } = req.user as Express.User;
+
     res.json(userWithoutPassword);
   });
 
-  // Admin middleware to protect routes
-  app.use("/api/admin/*", (req, res, next) => {
-    if (!req.isAuthenticated()) {
-      return res.status(401).json({ error: "Authentication required" });
-    }
-    next();
+  // Protected API route example
+  app.get("/api/admin/dashboard", isAuthenticated, (_req: Request, res: Response) => {
+    res.json({ message: "You have access to the admin dashboard!" });
   });
 
-  // Protected admin routes for post management
-  
-  // Create a new post with image upload
-  app.post("/api/admin/posts", upload.single("image"), async (req, res) => {
-    try {
-      let postData = JSON.parse(req.body.data);
-      
-      // If image was uploaded, add the path
-      if (req.file) {
-        postData.coverImage = `/uploads/${req.file.filename}`;
-      }
-      
-      const newPost = await storage.createPost(postData);
-      res.status(201).json(newPost);
-    } catch (error) {
-      console.error("Error creating post:", error);
-      res.status(500).json({ error: "Failed to create post" });
-    }
-  });
-
-  // Update an existing post
-  app.put("/api/admin/posts/:id", upload.single("image"), async (req, res) => {
-    try {
-      const id = parseInt(req.params.id);
-      let postData = JSON.parse(req.body.data);
-      
-      // If image was uploaded, add the path
-      if (req.file) {
-        postData.coverImage = `/uploads/${req.file.filename}`;
-      }
-      
-      const updatedPost = await storage.updatePost(id, postData);
-      
-      if (!updatedPost) {
-        return res.status(404).json({ error: "Post not found" });
-      }
-      
-      res.json(updatedPost);
-    } catch (error) {
-      console.error(`Error updating post:`, error);
-      res.status(500).json({ error: "Failed to update post" });
-    }
-  });
-
-  // Delete a post
-  app.delete("/api/admin/posts/:id", async (req, res) => {
-    try {
-      const id = parseInt(req.params.id);
-      const success = await storage.deletePost(id);
-      
-      if (!success) {
-        return res.status(404).json({ error: "Post not found" });
-      }
-      
-      res.json({ message: "Post deleted successfully" });
-    } catch (error) {
-      console.error(`Error deleting post:`, error);
-      res.status(500).json({ error: "Failed to delete post" });
-    }
-  });
-
-  // Get all categories (for dropdown menus in admin interface)
-  app.get("/api/admin/categories", async (req, res) => {
-    try {
-      const categories = await storage.getAllCategories();
-      res.json(categories);
-    } catch (error) {
-      console.error("Error fetching categories:", error);
-      res.status(500).json({ error: "Failed to fetch categories" });
-    }
-  });
-
-  // Get all authors (for dropdown menus in admin interface)
-  app.get("/api/admin/authors", async (req, res) => {
-    try {
-      const authors = await storage.getAllAuthors();
-      res.json(authors);
-    } catch (error) {
-      console.error("Error fetching authors:", error);
-      res.status(500).json({ error: "Failed to fetch authors" });
-    }
-  });
-
-  // Create a new category
-  app.post("/api/admin/categories", async (req, res) => {
-    try {
-      const newCategory = await storage.createCategory(req.body);
-      res.status(201).json(newCategory);
-    } catch (error) {
-      console.error("Error creating category:", error);
-      res.status(500).json({ error: "Failed to create category" });
-    }
-  });
-
-  // Create a new author
-  app.post("/api/admin/authors", async (req, res) => {
-    try {
-      const newAuthor = await storage.createAuthor(req.body);
-      res.status(201).json(newAuthor);
-    } catch (error) {
-      console.error("Error creating author:", error);
-      res.status(500).json({ error: "Failed to create author" });
-    }
-  });
+  // Expose authentication middleware for use in other routes
+  app.locals.isAuthenticated = isAuthenticated;
 }

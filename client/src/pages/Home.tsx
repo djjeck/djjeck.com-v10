@@ -39,10 +39,13 @@ const Home = () => {
     if (paginatedPosts.length > 0 && !isPending) {
       // Only add unique posts (avoid duplicates)
       const newPostIds = new Set(paginatedPosts.map(post => post.id));
-      const existingPosts = allPosts.filter(post => !newPostIds.has(post.id));
-      setAllPosts([...existingPosts, ...paginatedPosts]);
+      // Removed allPosts from this function to avoid the infinite loop
+      setAllPosts(prevPosts => {
+        const existingPosts = prevPosts.filter(post => !newPostIds.has(post.id));
+        return [...existingPosts, ...paginatedPosts];
+      });
     }
-  }, [paginatedPosts, isPending, allPosts]);
+  }, [paginatedPosts, isPending]);
   
   // Load more posts when user scrolls to the bottom or clicks "Load More"
   const loadMore = useCallback(() => {

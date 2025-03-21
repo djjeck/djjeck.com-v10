@@ -129,18 +129,20 @@ const BlogPostList = ({
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
-                <DropdownMenuItem onClick={() => setSortOption("newest")}>
+                <DropdownMenuItem onSelect={() => setSortOption("newest")}>
                   Newest First
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => setSortOption("oldest")}>
+                <DropdownMenuItem onSelect={() => setSortOption("oldest")}>
                   Oldest First
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => setSortOption("readTime")}>
+                <DropdownMenuItem onSelect={() => setSortOption("readTime")}>
                   Reading Time
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
             
+            {/* Temporarily disabled while we implement category filtering */}
+            {/*
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="outline" className="flex items-center gap-2">
@@ -155,6 +157,7 @@ const BlogPostList = ({
                 <DropdownMenuItem>DevOps</DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
+            */}
           </div>
         </div>
 

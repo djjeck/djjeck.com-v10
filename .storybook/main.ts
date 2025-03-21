@@ -1,4 +1,5 @@
 import type { StorybookConfig } from "@storybook/react-vite";
+import { join, resolve } from "path";
 
 const config: StorybookConfig = {
   stories: [
@@ -29,8 +30,8 @@ const config: StorybookConfig = {
         ...config.resolve,
         alias: {
           ...config.resolve?.alias,
-          "@": "/client/src",
-          "@shared": "/shared",
+          "@": resolve(__dirname, "../client/src"),
+          "@shared": resolve(__dirname, "../shared"),
         },
       },
     };

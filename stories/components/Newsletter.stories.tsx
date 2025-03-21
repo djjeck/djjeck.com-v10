@@ -1,19 +1,23 @@
 import React from "react";
 import type { Meta, StoryObj } from "@storybook/react";
 import Newsletter from "../../client/src/components/Newsletter";
-import { createTemplate } from "../../client/src/lib/storybook";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { queryClient } from "../../client/src/lib/queryClient";
 import { Toaster } from "../../client/src/components/ui/toaster";
 
-// Mock API call for Storybook
-// @ts-ignore
-window.fetch = jest.fn(() =>
-  Promise.resolve({
-    ok: true,
-    json: () => Promise.resolve({ message: "Subscribed to newsletter successfully" }),
-  })
-);
+// Setup for mocking fetch
+const originalFetch = global.fetch;
+if (typeof global.fetch === 'function') {
+  global.fetch = function mockFetch(input, init) {
+    if (input === '/api/newsletter/subscribe') {
+      return Promise.resolve({
+        ok: true,
+        json: () => Promise.resolve({ message: "Subscribed to newsletter successfully" }),
+      });
+    }
+    return originalFetch(input, init);
+  } as typeof fetch;
+}
 
 const meta: Meta<typeof Newsletter> = {
   title: "Components/Newsletter",
@@ -26,25 +30,19 @@ const meta: Meta<typeof Newsletter> = {
       },
     },
   },
-  argTypes: {},
+  decorators: [(Story) => (
+    <QueryClientProvider client={queryClient}>
+      <Story />
+      <Toaster />
+    </QueryClientProvider>
+  )],
 };
 
 export default meta;
 type Story = StoryObj<typeof Newsletter>;
 
-// Define a decorator to wrap the component with necessary providers
-const withProviders = (Story: any) => (
-  <QueryClientProvider client={queryClient}>
-    <Story />
-    <Toaster />
-  </QueryClientProvider>
-);
-
-const Template = (args: React.ComponentProps<typeof Newsletter>) => <Newsletter {...args} />;
-
 export const Default: Story = {
-  render: Template,
-  decorators: [withProviders],
+  render: () => <Newsletter />,
 };
 
 // Custom render for showing loading state

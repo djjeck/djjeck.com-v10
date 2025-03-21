@@ -1,8 +1,20 @@
 import type { Meta, StoryObj } from "@storybook/react";
-import { Button } from "@/components/ui/button";
-import { createStoryMeta, createTemplate, createStoryVariant } from "@/lib/storybook";
+import { Button } from "../../client/src/components/ui/button";
+import { createTemplate } from "../../client/src/lib/storybook";
 
-const meta = createStoryMeta(Button, "Components/Button") as Meta<typeof Button>;
+const meta: Meta<typeof Button> = {
+  title: "Components/Button",
+  component: Button,
+  parameters: {
+    layout: "centered",
+    docs: {
+      description: {
+        component: "Component documentation for Button",
+      },
+    },
+  },
+  argTypes: {},
+};
 
 export default meta;
 type Story = StoryObj<typeof Button>;

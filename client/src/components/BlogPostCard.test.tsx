@@ -1,63 +1,34 @@
 import React from 'react';
 import { render, screen } from '@testing-library/react';
 import BlogPostCard from './BlogPostCard';
-import { Author, Category, Post } from '@shared/schema';
+import { mockPosts } from '../test-utils/mock-data';
 
-describe('BlogPostCard component', () => {
-  const mockAuthor: Author = {
-    id: 1,
-    name: 'John Doe',
-    bio: 'A tech enthusiast',
-    avatarUrl: 'https://example.com/avatar.jpg',
-  };
-
-  const mockCategory: Category = {
-    id: 1,
-    slug: 'technology',
-    name: 'Technology',
-    description: 'All about tech',
-    image: 'https://example.com/category.jpg',
-  };
-
-  const mockPost: Post = {
-    id: 1,
-    title: 'Test Post',
-    slug: 'test-post',
-    excerpt: 'This is a test post',
-    content: 'This is the full content of the test post',
-    isFeatured: false,
-    authorId: 1,
-    categoryId: 1,
-    coverImage: 'https://example.com/image.jpg',
-    readTime: 5,
-    publishedAt: new Date().toISOString(),
-    tags: ['react', 'typescript'],
-    author: mockAuthor,
-    category: mockCategory,
-  };
-
+describe('BlogPostCard', () => {
+  // Use the first post from our mock data
+  const post = mockPosts[0];
+  
   it('renders post title', () => {
-    render(<BlogPostCard post={mockPost} />);
-    expect(screen.getByText('Test Post')).toBeInTheDocument();
+    render(<BlogPostCard post={post} />);
+    expect(screen.getByText(post.title)).toBeInTheDocument();
   });
-
+  
   it('renders post excerpt', () => {
-    render(<BlogPostCard post={mockPost} />);
-    expect(screen.getByText('This is a test post')).toBeInTheDocument();
+    render(<BlogPostCard post={post} />);
+    expect(screen.getByText(post.excerpt)).toBeInTheDocument();
   });
-
+  
   it('renders author name', () => {
-    render(<BlogPostCard post={mockPost} />);
-    expect(screen.getByText('John Doe')).toBeInTheDocument();
+    render(<BlogPostCard post={post} />);
+    expect(screen.getByText(post.author.name)).toBeInTheDocument();
   });
-
+  
   it('renders category name', () => {
-    render(<BlogPostCard post={mockPost} />);
-    expect(screen.getByText('Technology')).toBeInTheDocument();
+    render(<BlogPostCard post={post} />);
+    expect(screen.getByText(post.category.name)).toBeInTheDocument();
   });
-
-  it('renders read time', () => {
-    render(<BlogPostCard post={mockPost} />);
-    expect(screen.getByText('5 min read')).toBeInTheDocument();
+  
+  it('displays read time', () => {
+    render(<BlogPostCard post={post} />);
+    expect(screen.getByText(`${post.readTime} min read`)).toBeInTheDocument();
   });
 });

@@ -39,13 +39,13 @@ run_test() {
 overall_success=0
 
 # Run each test suite individually
-run_test "test/Button.test.tsx" "Button Component"
+run_test "client/src/components/ui/button.test.tsx" "Button Component"
 test1_result=$?
 
-run_test "test/BlogPostCard.test.tsx" "BlogPostCard Component"
+run_test "client/src/components/BlogPostCard.test.tsx" "BlogPostCard Component"
 test2_result=$?
 
-run_test "test/SimplifiedNewsletter.test.tsx" "Newsletter Component"
+run_test "client/src/components/Newsletter.test.tsx" "Newsletter Component"
 test3_result=$?
 
 # Calculate overall result

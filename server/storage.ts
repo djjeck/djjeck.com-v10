@@ -4,8 +4,14 @@ import {
   InsertCategory, 
   Category, 
   InsertAuthor, 
-  Author 
+  Author,
+  posts,
+  categories,
+  authors
 } from "@shared/schema";
+import { db } from "./db";
+import { eq, desc } from "drizzle-orm";
+import * as schema from "@shared/schema";
 
 export interface IStorage {
   // Post operations
@@ -557,4 +563,167 @@ While React SPAs present unique SEO challenges, implementing server-side renderi
   }
 }
 
-export const storage = new MemStorage();
+// Database storage implementation
+export class DatabaseStorage implements IStorage {
+  // Post methods
+  async getAllPosts(limit?: number, offset?: number): Promise<Post[]> {
+    const result = await db.query.posts.findMany({
+      with: {
+        author: true,
+        category: true
+      },
+      orderBy: (posts, { desc }) => [desc(posts.publishedAt)],
+      limit: limit,
+      offset: offset
+    });
+    
+    return result.map(post => ({
+      ...post,
+      author: post.author,
+      category: post.category
+    }));
+  }
+  
+  async getPostById(id: number): Promise<Post | undefined> {
+    const result = await db.query.posts.findFirst({
+      where: (posts, { eq }) => eq(posts.id, id),
+      with: {
+        author: true,
+        category: true
+      }
+    });
+    
+    if (!result) return undefined;
+    
+    return {
+      ...result,
+      author: result.author,
+      category: result.category
+    };
+  }
+  
+  async getPostBySlug(slug: string): Promise<Post | undefined> {
+    const result = await db.query.posts.findFirst({
+      where: (posts, { eq }) => eq(posts.slug, slug),
+      with: {
+        author: true,
+        category: true
+      }
+    });
+    
+    if (!result) return undefined;
+    
+    return {
+      ...result,
+      author: result.author,
+      category: result.category
+    };
+  }
+  
+  async getPostsByCategory(categorySlug: string): Promise<Post[]> {
+    const category = await this.getCategoryBySlug(categorySlug);
+    if (!category) return [];
+    
+    const result = await db.query.posts.findMany({
+      where: (posts, { eq }) => eq(posts.categoryId, category.id),
+      with: {
+        author: true,
+        category: true
+      },
+      orderBy: (posts, { desc }) => [desc(posts.publishedAt)]
+    });
+    
+    return result.map(post => ({
+      ...post,
+      author: post.author,
+      category: post.category
+    }));
+  }
+  
+  async getFeaturedPost(): Promise<Post | undefined> {
+    const result = await db.query.posts.findFirst({
+      where: (posts, { eq }) => eq(posts.isFeatured, true),
+      with: {
+        author: true,
+        category: true
+      }
+    });
+    
+    if (!result) return undefined;
+    
+    return {
+      ...result,
+      author: result.author,
+      category: result.category
+    };
+  }
+  
+  async createPost(insertPost: InsertPost): Promise<Post> {
+    const [post] = await db.insert(posts)
+      .values(insertPost)
+      .returning();
+    
+    // Get the full post with relations
+    const fullPost = await this.getPostById(post.id);
+    if (!fullPost) {
+      throw new Error(`Failed to retrieve created post with ID ${post.id}`);
+    }
+    
+    return fullPost;
+  }
+  
+  // Category methods
+  async getAllCategories(): Promise<Category[]> {
+    const categories = await db.select().from(schema.categories);
+    return categories;
+  }
+  
+  async getCategoryById(id: number): Promise<Category | undefined> {
+    const [category] = await db.select()
+      .from(schema.categories)
+      .where(eq(schema.categories.id, id));
+    
+    return category;
+  }
+  
+  async getCategoryBySlug(slug: string): Promise<Category | undefined> {
+    const [category] = await db.select()
+      .from(schema.categories)
+      .where(eq(schema.categories.slug, slug));
+    
+    return category;
+  }
+  
+  async createCategory(insertCategory: InsertCategory): Promise<Category> {
+    const [category] = await db.insert(schema.categories)
+      .values(insertCategory)
+      .returning();
+    
+    return category;
+  }
+  
+  // Author methods
+  async getAllAuthors(): Promise<Author[]> {
+    const authors = await db.select().from(schema.authors);
+    return authors;
+  }
+  
+  async getAuthorById(id: number): Promise<Author | undefined> {
+    const [author] = await db.select()
+      .from(schema.authors)
+      .where(eq(schema.authors.id, id));
+    
+    return author;
+  }
+  
+  async createAuthor(insertAuthor: InsertAuthor): Promise<Author> {
+    const [author] = await db.insert(schema.authors)
+      .values(insertAuthor)
+      .returning();
+    
+    return author;
+  }
+}
+
+// Switch from MemStorage to DatabaseStorage
+export const storage = new DatabaseStorage();

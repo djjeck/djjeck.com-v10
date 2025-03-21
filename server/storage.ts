@@ -1137,11 +1137,20 @@ While React SPAs present unique SEO challenges, implementing server-side renderi
         offset: offset
       });
       
-      return result.map(post => ({
-        ...post,
-        author: post.author,
-        category: post.category
-      }));
+      // Get images for each post
+      const postsWithImages = await Promise.all(
+        result.map(async (post) => {
+          const images = await this.getPostImages(post.id);
+          return {
+            ...post,
+            author: post.author,
+            category: post.category,
+            images: images
+          };
+        })
+      );
+      
+      return postsWithImages;
     } catch (error) {
       console.error("Error getting all posts:", error);
       return [];
@@ -1160,10 +1169,14 @@ While React SPAs present unique SEO challenges, implementing server-side renderi
       
       if (!result) return undefined;
       
+      // Fetch post images
+      const images = await this.getPostImages(id);
+      
       return {
         ...result,
         author: result.author,
-        category: result.category
+        category: result.category,
+        images: images
       };
     } catch (error) {
       console.error(`Error getting post by ID ${id}:`, error);
@@ -1183,10 +1196,14 @@ While React SPAs present unique SEO challenges, implementing server-side renderi
       
       if (!result) return undefined;
       
+      // Fetch post images
+      const images = await this.getPostImages(result.id);
+      
       return {
         ...result,
         author: result.author,
-        category: result.category
+        category: result.category,
+        images: images
       };
     } catch (error) {
       console.error(`Error getting post by slug ${slug}:`, error);
@@ -1208,11 +1225,20 @@ While React SPAs present unique SEO challenges, implementing server-side renderi
         orderBy: [desc(posts.publishedAt)]
       });
       
-      return result.map(post => ({
-        ...post,
-        author: post.author,
-        category: post.category
-      }));
+      // Get images for each post
+      const postsWithImages = await Promise.all(
+        result.map(async (post) => {
+          const images = await this.getPostImages(post.id);
+          return {
+            ...post,
+            author: post.author,
+            category: post.category,
+            images: images
+          };
+        })
+      );
+      
+      return postsWithImages;
     } catch (error) {
       console.error(`Error getting posts by category ${categorySlug}:`, error);
       return [];
@@ -1231,10 +1257,14 @@ While React SPAs present unique SEO challenges, implementing server-side renderi
       
       if (!result) return undefined;
       
+      // Fetch post images
+      const images = await this.getPostImages(result.id);
+      
       return {
         ...result,
         author: result.author,
-        category: result.category
+        category: result.category,
+        images: images
       };
     } catch (error) {
       console.error("Error getting featured post:", error);

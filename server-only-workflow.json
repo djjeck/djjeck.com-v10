@@ -1,16 +1,11 @@
 {
-  "workflow": {
-    "name": "Server Only",
-    "author": "agent",
-    "metadata": {
-      "agentRequireRestartOnSave": false
-    },
-    "tasks": [
-      {
-        "task": "shell.exec",
-        "args": "./server-only.sh",
-        "waitForPort": 5000
-      }
-    ]
+  "commands": {
+    "Server Only": "NODE_ENV=development npx tsx server/index.ts"
+  },
+  "tasks": {
+    "start": {
+      "command": "Server Only",
+      "runAtStart": true
+    }
   }
 }

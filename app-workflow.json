@@ -1,14 +1,7 @@
 {
-  "name": "Blog App",
-  "description": "Starts the blog application server",
-  "commands": [
-    "npm run dev"
-  ],
-  "restartOn": {
-    "files": [
-      "client/**/*",
-      "server/**/*",
-      "shared/**/*"
-    ]
+  "name": "Start application",
+  "command": "npx tsx server/index.ts",
+  "logs": {
+    "max_lines": 1000
   }
 }

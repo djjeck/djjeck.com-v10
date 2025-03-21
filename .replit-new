@@ -1,59 +1,25 @@
-modules = ["nodejs-20", "bash", "web"]
-run = "npm run dev"
-hidden = [".config", ".git", "generated-icon.png", "node_modules", "dist"]
+run = "bash ./start-fast.sh"
+modules = ["nodejs-20:v8-20230920-bd784b9"]
 
 [nix]
-channel = "stable-24_05"
+channel = "stable-23_11"
+
+[env]
+XDG_CONFIG_HOME = "/home/runner/.config"
+PATH = "/home/runner/$REPL_SLUG/.config/npm/node_global/bin:/home/runner/$REPL_SLUG/node_modules/.bin"
+npm_config_prefix = "/home/runner/$REPL_SLUG/.config/npm/node_global"
+
+[debugger]
+support = true
+
+[unitTest]
+language = "nodejs"
 
 [deployment]
-deploymentTarget = "autoscale"
-run = ["npm", "run", "start"]
-build = ["npm", "run", "build"]
-
-[workflows]
-runButton = "Test and Run"
-
-[[workflows.workflow]]
-name = "Project"
-mode = "parallel"
-author = "agent"
-
-[[workflows.workflow.tasks]]
-task = "workflow.run"
-args = "Start application"
-
-[[workflows.workflow]]
-name = "Start application"
-author = "agent"
-
-[workflows.workflow.metadata]
-agentRequireRestartOnSave = false
-
-[[workflows.workflow.tasks]]
-task = "packager.installForAll"
-
-[[workflows.workflow.tasks]]
-task = "shell.exec"
-args = "./direct-start.sh"
-waitForPort = 5000
-
-[[workflows.workflow]]
-name = "Test and Run"
-author = 40633749
-mode = "sequential"
-
-[[workflows.workflow.tasks]]
-task = "shell.exec"
-args = "npm run test"
-
-[[workflows.workflow.tasks]]
-task = "shell.exec"
-args = "npm run dev"
+run = ["sh", "-c", "node dist/index.js"]
+build = ["sh", "-c", "npm run build"]
+deploymentTarget = "cloudrun"
 
 [[ports]]
 localPort = 5000
 externalPort = 80
-
-[[ports]]
-localPort = 6006
-externalPort = 3000

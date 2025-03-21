@@ -351,10 +351,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
   
   // Update a post image (protected)
-  app.patch("/api/post-images/:id", isAuthenticated, async (req, res) => {
+  app.patch("/api/posts/:postId/images/:id", isAuthenticated, async (req, res) => {
     try {
       const id = parseInt(req.params.id);
-      const imageData = insertPostImageSchema.partial().parse(req.body);
+      const postId = parseInt(req.params.postId);
+      
+      if (isNaN(id) || isNaN(postId)) {
+        return res.status(400).json({ message: "Invalid post or image ID" });
+      }
+      
+      const imageData = insertPostImageSchema.partial().parse({
+        ...req.body,
+        postId
+      });
       
       const updatedImage = await storage.updatePostImage(id, imageData);
       
@@ -374,15 +383,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
   
   // Delete a post image (protected)
-  app.delete("/api/post-images/:id", isAuthenticated, async (req, res) => {
+  app.delete("/api/posts/:postId/images/:id", isAuthenticated, async (req, res) => {
     try {
       const id = parseInt(req.params.id);
+      
+      if (isNaN(id)) {
+        return res.status(400).json({ message: "Invalid image ID" });
+      }
+      
       const success = await storage.deletePostImage(id);
       
       if (success) {
-        res.status(200).json({ message: "Post image deleted successfully" });
+        res.status(204).send();
       } else {
-        res.status(500).json({ message: "Failed to delete post image" });
+        res.status(404).json({ message: "Post image not found" });
       }
     } catch (error) {
       console.error("Error deleting post image:", error);

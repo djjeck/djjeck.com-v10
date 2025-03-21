@@ -1,3 +1,4 @@
+import { useCallback, useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import Hero from "@/components/Hero";
 import FeaturedCategories from "@/components/FeaturedCategories";
@@ -6,18 +7,52 @@ import Newsletter from "@/components/Newsletter";
 import { Post, Category } from "@shared/schema";
 import { Helmet } from "react-helmet";
 
+const POSTS_PER_PAGE = 5;
+
 const Home = () => {
-  const { data: posts, isLoading: isLoadingPosts } = useQuery<Post[]>({
-    queryKey: ["/api/posts"],
+  const [page, setPage] = useState(1);
+  // Keep track of all posts loaded so far
+  const [allPosts, setAllPosts] = useState<Post[]>([]);
+  
+  // Fetch posts with pagination
+  const { 
+    data: paginatedPosts = [], 
+    isLoading: isLoadingPosts,
+    isFetching: isFetchingPosts,
+    isPending
+  } = useQuery<Post[]>({
+    queryKey: ["/api/posts", { limit: POSTS_PER_PAGE, offset: (page - 1) * POSTS_PER_PAGE }],
   });
 
-  const { data: categories, isLoading: isLoadingCategories } = useQuery<Category[]>({
+  // Fetch categories for the sidebar
+  const { data: categories = [] } = useQuery<Category[]>({
     queryKey: ["/api/categories"],
   });
 
-  const { data: featuredPost, isLoading: isLoadingFeatured } = useQuery<Post>({
+  // Fetch featured post for the hero section
+  const { data: featuredPost } = useQuery<Post>({
     queryKey: ["/api/posts/featured"],
   });
+  
+  // Update allPosts when new data comes in
+  useEffect(() => {
+    if (paginatedPosts.length > 0 && !isPending) {
+      // Only add unique posts (avoid duplicates)
+      const newPostIds = new Set(paginatedPosts.map(post => post.id));
+      const existingPosts = allPosts.filter(post => !newPostIds.has(post.id));
+      setAllPosts([...existingPosts, ...paginatedPosts]);
+    }
+  }, [paginatedPosts, isPending, allPosts]);
+  
+  // Load more posts when user scrolls to the bottom or clicks "Load More"
+  const loadMore = useCallback(() => {
+    if (!isLoadingPosts && !isFetchingPosts && paginatedPosts.length === POSTS_PER_PAGE) {
+      setPage(prevPage => prevPage + 1);
+    }
+  }, [isLoadingPosts, isFetchingPosts, paginatedPosts.length]);
+  
+  // Check if there might be more posts to load
+  const hasMore = paginatedPosts.length === POSTS_PER_PAGE;
 
   return (
     <>
@@ -29,12 +64,14 @@ const Home = () => {
       <Hero featuredPost={featuredPost} />
       
       <FeaturedCategories 
-        categories={categories || []} 
+        categories={categories} 
       />
       
       <BlogPostList 
-        posts={posts || []} 
-        isLoading={isLoadingPosts} 
+        posts={allPosts} 
+        isLoading={isLoadingPosts || isFetchingPosts}
+        loadMore={loadMore}
+        hasMore={hasMore}
       />
       
       <Newsletter />

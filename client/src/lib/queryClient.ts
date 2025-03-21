@@ -23,13 +23,42 @@ export async function apiRequest(
   return res;
 }
 
+/**
+ * Converts a query params object to a URL query string
+ */
+export function buildQueryString(params?: Record<string, any>): string {
+  if (!params) return '';
+  
+  const queryParams = new URLSearchParams();
+  
+  Object.entries(params).forEach(([key, value]) => {
+    if (value !== undefined && value !== null) {
+      queryParams.append(key, String(value));
+    }
+  });
+  
+  const queryString = queryParams.toString();
+  return queryString ? `?${queryString}` : '';
+}
+
 type UnauthorizedBehavior = "returnNull" | "throw";
 export const getQueryFn: <T>(options: {
   on401: UnauthorizedBehavior;
 }) => QueryFunction<T> =
   ({ on401: unauthorizedBehavior }) =>
   async ({ queryKey }) => {
-    const res = await fetch(queryKey[0] as string, {
+    // Extract base URL and params
+    const baseUrl = queryKey[0] as string;
+    let params: Record<string, any> | undefined = undefined;
+    
+    if (queryKey.length > 1 && queryKey[1] !== null && typeof queryKey[1] === 'object') {
+      params = queryKey[1] as Record<string, any>;
+    }
+    
+    // Build the full URL with query parameters
+    const url = `${baseUrl}${buildQueryString(params)}`;
+    
+    const res = await fetch(url, {
       credentials: "include",
     });
 

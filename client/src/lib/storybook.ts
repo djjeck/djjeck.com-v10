@@ -1,5 +1,6 @@
 // This file contains utilities for Storybook integration
-import { ComponentProps, ComponentType } from "react";
+import React from "react";
+import type { ComponentProps, ComponentType } from "react";
 
 /**
  * Creates story args based on component props

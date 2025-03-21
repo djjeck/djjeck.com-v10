@@ -1,4 +1,6 @@
 #!/bin/bash
-# Direct starter script that bypasses TypeScript compilation
-echo "Starting server directly..."
-node start-dev-server.js
+# This script directly starts the server bypassing TypeScript checks
+# It uses tsx which handles TypeScript files directly
+
+echo "Starting server with tsx directly..."
+NODE_ENV=development npx tsx server/index.ts

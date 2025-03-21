@@ -1,0 +1,16 @@
+{
+  "workflow": {
+    "name": "Start Server Direct",
+    "author": "agent",
+    "metadata": {
+      "agentRequireRestartOnSave": false
+    },
+    "tasks": [
+      {
+        "task": "shell.exec",
+        "args": "./server-tsx.sh",
+        "waitForPort": 5000
+      }
+    ]
+  }
+}

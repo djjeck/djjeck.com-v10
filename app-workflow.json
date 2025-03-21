@@ -1,0 +1,14 @@
+{
+  "name": "Blog App",
+  "description": "Starts the blog application server",
+  "commands": [
+    "npm run dev"
+  ],
+  "restartOn": {
+    "files": [
+      "client/**/*",
+      "server/**/*",
+      "shared/**/*"
+    ]
+  }
+}

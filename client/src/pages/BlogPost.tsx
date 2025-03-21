@@ -92,7 +92,7 @@ const BlogPost = () => {
             
             <div className="flex items-center pb-6">
               <img 
-                src={post.author.avatarUrl} 
+                src={post.author.avatarUrl || undefined} 
                 alt={post.author.name} 
                 className="w-10 h-10 rounded-full mr-3" 
               />
@@ -116,7 +116,7 @@ const BlogPost = () => {
         
         <div className="w-full h-96 bg-gray-100 mb-10">
           <img 
-            src={post.coverImage} 
+            src={post.coverImage || undefined} 
             alt={post.title} 
             className="w-full h-full object-cover" 
           />
@@ -133,15 +133,19 @@ const BlogPost = () => {
             <div className="mb-4 sm:mb-0">
               <h3 className="text-lg font-medium text-gray-900">Tags</h3>
               <div className="flex flex-wrap gap-2 mt-2">
-                {post.tags.map((tag, index) => (
-                  <Link 
-                    key={index} 
-                    href={`/tag/${tag}`}
-                    className="inline-block bg-gray-100 px-3 py-1 text-sm text-gray-800 rounded-full hover:bg-gray-200"
-                  >
-                    #{tag}
-                  </Link>
-                ))}
+                {post.tags && post.tags.length > 0 ? (
+                  post.tags.map((tag, index) => (
+                    <Link 
+                      key={index} 
+                      href={`/tag/${tag}`}
+                      className="inline-block bg-gray-100 px-3 py-1 text-sm text-gray-800 rounded-full hover:bg-gray-200"
+                    >
+                      #{tag}
+                    </Link>
+                  ))
+                ) : (
+                  <span className="text-sm text-gray-500">No tags</span>
+                )}
               </div>
             </div>
             <div className="flex space-x-4">

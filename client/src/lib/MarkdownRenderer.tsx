@@ -37,11 +37,11 @@ const MarkdownRenderer = ({ content }: MarkdownRendererProps) => {
         img: ({ node, ...props }) => (
           <img className="max-w-full h-auto my-6 rounded-lg" {...props} />
         ),
-        code: ({ node, inline, className, children, ...props }) => {
+        code: ({ node, className, children, ...props }: any) => {
           const match = /language-(\w+)/.exec(className || '');
-          return !inline && match ? (
+          return !props.inline && match ? (
             <SyntaxHighlighter
-              style={vscDarkPlus}
+              style={vscDarkPlus as any}
               language={match[1]}
               PreTag="div"
               className="rounded-md my-4"

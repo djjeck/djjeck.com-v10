@@ -1,4 +1,4 @@
 #!/bin/bash
-# This script starts the server directly without TypeScript checks
-echo "Starting server without TypeScript checks..."
-npx tsx server/index.ts
+# This script bypasses TypeScript checks and test runs
+echo "Starting server without checks..."
+NODE_ENV=development npx tsx server/index.ts

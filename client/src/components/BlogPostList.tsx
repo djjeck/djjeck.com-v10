@@ -34,7 +34,7 @@ const BlogPostList = ({
       case "oldest":
         return new Date(a.publishedAt).getTime() - new Date(b.publishedAt).getTime();
       case "readTime":
-        return a.readTime - b.readTime;
+        return (a.readTime || 0) - (b.readTime || 0);
       default:
         return 0;
     }

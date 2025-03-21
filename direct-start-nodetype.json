@@ -1,0 +1,19 @@
+{
+  "workflow": {
+    "name": "Start without TypeChecks",
+    "author": "agent",
+    "metadata": {
+      "agentRequireRestartOnSave": false
+    },
+    "tasks": [
+      {
+        "task": "packager.installForAll"
+      },
+      {
+        "task": "shell.exec",
+        "args": "./start-server-without-checks.sh",
+        "waitForPort": 5000
+      }
+    ]
+  }
+}

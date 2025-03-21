@@ -1,0 +1,16 @@
+{
+  "workflow": {
+    "name": "Server Only",
+    "author": "agent",
+    "metadata": {
+      "agentRequireRestartOnSave": false
+    },
+    "tasks": [
+      {
+        "task": "shell.exec",
+        "args": "./server-only.sh",
+        "waitForPort": 5000
+      }
+    ]
+  }
+}

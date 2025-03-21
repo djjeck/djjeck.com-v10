@@ -11,7 +11,7 @@ const BlogPostCard = ({ post }: BlogPostCardProps) => {
       <Link href={`/post/${post.slug}`}>
         <div className="relative">
           <img 
-            src={post.coverImage} 
+            src={post.coverImage || undefined} 
             alt={post.title} 
             className="w-full h-48 object-cover" 
           />
@@ -30,7 +30,7 @@ const BlogPostCard = ({ post }: BlogPostCardProps) => {
           </p>
           <div className="flex items-center text-sm text-gray-500">
             <img 
-              src={post.author.avatarUrl} 
+              src={post.author.avatarUrl || undefined} 
               alt={post.author.name} 
               className="w-8 h-8 rounded-full mr-2" 
             />

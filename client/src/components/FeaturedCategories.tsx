@@ -38,7 +38,7 @@ const FeaturedCategories = ({ categories }: FeaturedCategoriesProps) => {
             >
               <div className="aspect-w-16 aspect-h-9">
                 <img
-                  src={category.image}
+                  src={category.image || undefined}
                   alt={`${category.name} category`}
                   className="h-full w-full object-cover"
                 />

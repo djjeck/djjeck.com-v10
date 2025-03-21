@@ -61,7 +61,7 @@ const Header = () => {
               </Link>
             </nav>
           </div>
-          <div className="hidden sm:ml-6 sm:flex sm:items-center">
+          <div className="hidden sm:ml-6 sm:flex sm:items-center gap-4">
             <button
               type="button"
               className="p-1 rounded-full text-gray-400 hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary"
@@ -69,6 +69,11 @@ const Header = () => {
               <span className="sr-only">Search</span>
               <Search className="h-6 w-6" />
             </button>
+            <Link href="/auth">
+              <Button variant="outline" size="sm">
+                Admin
+              </Button>
+            </Link>
           </div>
           <div className="-mr-2 flex items-center sm:hidden">
             <button

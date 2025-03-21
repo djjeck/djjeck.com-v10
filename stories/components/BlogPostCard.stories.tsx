@@ -1,3 +1,4 @@
+import React from "react";
 import type { Meta, StoryObj } from "@storybook/react";
 import BlogPostCard from "../../client/src/components/BlogPostCard";
 import { createTemplate } from "../../client/src/lib/storybook";
@@ -19,7 +20,7 @@ const meta: Meta<typeof BlogPostCard> = {
 export default meta;
 type Story = StoryObj<typeof BlogPostCard>;
 
-const Template = createTemplate(BlogPostCard);
+const Template = (args: React.ComponentProps<typeof BlogPostCard>) => <BlogPostCard {...args} />;
 
 export const Default: Story = {
   render: Template,

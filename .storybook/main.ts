@@ -5,14 +5,13 @@ const config: StorybookConfig = {
   stories: [
     "../stories/**/*.mdx",
     "../stories/**/*.stories.@(js|jsx|ts|tsx)",
-    "../client/src/components/**/*.stories.@(js|jsx|ts|tsx)",
   ],
   addons: [
     "@storybook/addon-links",
     "@storybook/addon-essentials",
     "@storybook/addon-interactions",
     "@storybook/addon-a11y",
-    "@storybook/addon-styling",
+    // Removing @storybook/addon-styling as it's incompatible with Storybook v8
   ],
   framework: {
     name: "@storybook/react-vite",
@@ -22,7 +21,13 @@ const config: StorybookConfig = {
     autodocs: "tag",
   },
   staticDirs: ["../public"],
+  core: {
+    disableTelemetry: true,
+  },
+  // Set logLevel to debug to see more information
+  logLevel: 'debug',
   viteFinal: async (config) => {
+    console.log("Running viteFinal configuration");
     // Customize the Vite config here
     return {
       ...config,

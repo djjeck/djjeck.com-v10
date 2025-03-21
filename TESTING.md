@@ -15,7 +15,15 @@ The project uses Jest for testing, configured with the following:
 
 - **jest.config.mjs**: Main Jest configuration file
 - **babel.config.cjs**: Babel configuration for Jest
-- **test/setup.ts**: Setup file for testing environment
+- **client/src/test-utils/setup.ts**: Setup file for testing environment
+
+## Test Organization
+
+Tests are co-located with the components they are testing. This makes it easier to find tests and keep them in sync with component changes.
+
+- Tests follow the naming pattern `ComponentName.test.tsx` or `ComponentName.spec.tsx`
+- Test utilities are located in the `client/src/test-utils` directory
+- Test files are not included in production builds (configured in Jest)
 
 ## Available Tests
 
@@ -58,17 +66,17 @@ You can also run individual test files:
 
 ```bash
 # Run with Node ES Modules support
-NODE_OPTIONS=--experimental-vm-modules npx jest --config=jest.config.mjs test/Button.test.tsx
+NODE_OPTIONS=--experimental-vm-modules npx jest --config=jest.config.mjs client/src/components/ui/button.test.tsx
 
 # Run with verbose output
-NODE_OPTIONS=--experimental-vm-modules npx jest --config=jest.config.mjs test/Button.test.tsx --verbose
+NODE_OPTIONS=--experimental-vm-modules npx jest --config=jest.config.mjs client/src/components/BlogPostCard.test.tsx --verbose
 ```
 
 ## Adding New Tests
 
 To add a new test:
 
-1. Create a new test file in the `test` directory
+1. Create a new test file next to the component being tested with a `.test.tsx` or `.spec.tsx` extension
 2. Import the component and testing utilities
 3. Write your test cases
 4. Add the test file to `run-component-tests.sh` if you want it included in the test script
@@ -78,7 +86,7 @@ Example test file structure:
 ```tsx
 import React from 'react';
 import { render, screen } from '@testing-library/react';
-import YourComponent from '../client/src/components/YourComponent';
+import YourComponent from './YourComponent';
 
 describe('YourComponent', () => {
   it('renders correctly', () => {
@@ -87,6 +95,15 @@ describe('YourComponent', () => {
   });
 });
 ```
+
+## Testing Utilities
+
+The project includes several testing utilities:
+
+- **test-utils/setup.ts**: Jest setup file that imports testing library extensions
+- **test-utils/styleMock.js**: Mock for CSS imports in tests
+- **test-utils/mock-data.ts**: Common mock data for testing components
+- **test-utils/test-utils.tsx**: Custom render function with React Query provider
 
 ## Troubleshooting
 

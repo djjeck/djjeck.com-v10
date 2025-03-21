@@ -3,10 +3,13 @@ import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import Newsletter from '../client/src/components/Newsletter';
 
-// Mock the api request function
+// Create a mock for the queryClient module
+const mockApiRequest = jest.fn().mockResolvedValue({ success: true });
 jest.mock('../client/src/lib/queryClient', () => ({
-  apiRequest: jest.fn().mockResolvedValue({ success: true }),
-  queryClient: new QueryClient(),
+  apiRequest: mockApiRequest,
+  queryClient: {
+    invalidateQueries: jest.fn()
+  }
 }));
 
 describe('Newsletter component', () => {
@@ -55,8 +58,7 @@ describe('Newsletter component', () => {
   });
 
   it('handles successful form submission', async () => {
-    const { apiRequest } = require('../client/src/lib/queryClient');
-    apiRequest.mockResolvedValueOnce({ success: true });
+    mockApiRequest.mockResolvedValueOnce({ success: true });
     
     renderWithQueryClient(<Newsletter />);
     
@@ -67,7 +69,7 @@ describe('Newsletter component', () => {
     fireEvent.click(submitButton);
     
     await waitFor(() => {
-      expect(apiRequest).toHaveBeenCalledWith('/api/newsletter', {
+      expect(mockApiRequest).toHaveBeenCalledWith('/api/newsletter', {
         method: 'POST',
         body: JSON.stringify({ email: 'test@example.com' }),
       });

@@ -42,5 +42,5 @@ export function createStoryVariant<TComponent extends ComponentType<any>>(
 export function createTemplate<TComponent extends ComponentType<any>>(
   Component: TComponent
 ) {
-  return (args: ComponentProps<typeof Component>) => <Component {...args} />;
+  return (args: ComponentProps<typeof Component>) => React.createElement(Component, args);
 }

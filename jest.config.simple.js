@@ -1,16 +1,19 @@
-// A simplified Jest configuration to get tests running
+/** @type {import('jest').Config} */
 export default {
-  // Use plain JS for tests in this configuration
-  testEnvironment: "node",
-  
-  // Only look for JavaScript test files to avoid TypeScript compilation issues for now
-  testMatch: [
-    "**/simple.test.js"
+  preset: 'ts-jest/presets/js-with-ts-esm',
+  testEnvironment: 'jsdom',
+  transform: {
+    '^.+\\.(ts|tsx)$': ['ts-jest', {
+      useESM: true,
+    }],
+  },
+  moduleNameMapper: {
+    '\\.(css|less|scss)$': 'identity-obj-proxy',
+  },
+  testTimeout: 30000,
+  setupFilesAfterEnv: ['@testing-library/jest-dom'],
+  transformIgnorePatterns: [
+    'node_modules/(?!(@testing-library)/)'
   ],
-  
-  // Minimal timeout
-  testTimeout: 5000,
-  
-  // Display detailed output
-  verbose: true
+  extensionsToTreatAsEsm: ['.ts', '.tsx'],
 };

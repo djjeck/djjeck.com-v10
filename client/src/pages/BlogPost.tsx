@@ -4,6 +4,7 @@ import { useRoute, Link } from "wouter";
 import { Post } from "@shared/schema";
 import MarkdownRenderer from "@/lib/MarkdownRenderer";
 import Newsletter from "@/components/Newsletter";
+import ImageCarousel from "@/components/ImageCarousel";
 import { Helmet } from "react-helmet";
 import { Separator } from "@/components/ui/separator";
 import { ArrowLeft } from "lucide-react";
@@ -114,13 +115,27 @@ const BlogPost = () => {
           </header>
         </div>
         
-        <div className="w-full h-96 bg-gray-100 mb-10">
-          <img 
-            src={post.coverImage || undefined} 
-            alt={post.title} 
-            className="w-full h-full object-cover" 
-          />
-        </div>
+        {/* Post images carousel */}
+        {post.images && post.images.length > 0 ? (
+          <div className="my-6">
+            <ImageCarousel images={post.images} altText={post.title} />
+          </div>
+        ) : (
+          <div className="w-full h-96 bg-gray-100 mb-10">
+            <img 
+              src={post.coverImage || undefined} 
+              alt={post.title} 
+              className="w-full h-full object-cover" 
+            />
+          </div>
+        )}
+        
+        {/* Debugging info - remove after testing */}
+        {post.images && (
+          <div className="text-xs text-gray-500 mb-2">
+            Images: {post.images.length > 0 ? `${post.images.length} found` : 'None found'}
+          </div>
+        )}
 
         <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 pb-16">
           <div className="prose prose-lg prose-blue mx-auto">

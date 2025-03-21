@@ -23,4 +23,5 @@ export default {
   moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'json', 'node'],
   testTimeout: 20000, // Extended timeout
   verbose: true,
+  testPathIgnorePatterns: ['/node_modules/', '/test-utils/'],
 };

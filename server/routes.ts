@@ -11,7 +11,6 @@ import { z } from "zod";
 import { setupAuth, upload } from "./auth";
 import path from "path";
 import fs from "fs";
-import { z } from "zod";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Setup authentication and protected routes
@@ -191,6 +190,121 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error subscribing to newsletter:", error);
       res.status(500).json({ message: "Failed to subscribe to newsletter" });
+    }
+  });
+
+  // Protected admin routes
+  const isAuthenticated = app.locals.isAuthenticated;
+
+  // Get a single post by ID
+  app.get("/api/posts/:id", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const post = await storage.getPostById(id);
+      
+      if (!post) {
+        return res.status(404).json({ message: "Post not found" });
+      }
+      
+      res.json(post);
+    } catch (error) {
+      console.error("Error fetching post by id:", error);
+      res.status(500).json({ message: "Failed to fetch post" });
+    }
+  });
+
+  // Create a new post (protected)
+  app.post("/api/admin/posts", isAuthenticated, async (req, res) => {
+    try {
+      const postData = insertPostSchema.parse(req.body);
+      const newPost = await storage.createPost(postData);
+      
+      res.status(201).json(newPost);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ errors: error.errors });
+      }
+      
+      console.error("Error creating post:", error);
+      res.status(500).json({ message: "Failed to create post" });
+    }
+  });
+
+  // Update a post (protected)
+  app.patch("/api/posts/:id", isAuthenticated, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const post = await storage.getPostById(id);
+      
+      if (!post) {
+        return res.status(404).json({ message: "Post not found" });
+      }
+      
+      const postData = insertPostSchema.partial().parse(req.body);
+      const updatedPost = await storage.updatePost(id, postData);
+      
+      res.json(updatedPost);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ errors: error.errors });
+      }
+      
+      console.error("Error updating post:", error);
+      res.status(500).json({ message: "Failed to update post" });
+    }
+  });
+
+  // Delete a post (protected)
+  app.delete("/api/posts/:id", isAuthenticated, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const post = await storage.getPostById(id);
+      
+      if (!post) {
+        return res.status(404).json({ message: "Post not found" });
+      }
+      
+      const success = await storage.deletePost(id);
+      
+      if (success) {
+        res.status(200).json({ message: "Post deleted successfully" });
+      } else {
+        res.status(500).json({ message: "Failed to delete post" });
+      }
+    } catch (error) {
+      console.error("Error deleting post:", error);
+      res.status(500).json({ message: "Failed to delete post" });
+    }
+  });
+
+  // Upload an image (protected)
+  app.post("/api/upload", isAuthenticated, upload.single("image"), (req, res) => {
+    try {
+      if (!req.file) {
+        return res.status(400).json({ message: "No file uploaded" });
+      }
+      
+      // Return the URL to the uploaded file
+      const imageUrl = `/uploads/${req.file.filename}`;
+      
+      res.status(200).json({ 
+        message: "File uploaded successfully",
+        imageUrl
+      });
+    } catch (error) {
+      console.error("Error uploading file:", error);
+      res.status(500).json({ message: "Failed to upload file" });
+    }
+  });
+
+  // Get all authors (admin dashboard use)
+  app.get("/api/authors", async (req, res) => {
+    try {
+      const authors = await storage.getAllAuthors();
+      res.json(authors);
+    } catch (error) {
+      console.error("Error fetching authors:", error);
+      res.status(500).json({ message: "Failed to fetch authors" });
     }
   });
 

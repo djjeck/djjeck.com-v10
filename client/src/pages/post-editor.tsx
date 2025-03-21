@@ -272,10 +272,84 @@ export default function PostEditor() {
                         name="coverImage"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Cover Image URL</FormLabel>
-                            <FormControl>
-                              <Input placeholder="https://example.com/image.jpg" {...field} />
-                            </FormControl>
+                            <FormLabel>Cover Image</FormLabel>
+                            <div className="space-y-4">
+                              <FormControl>
+                                <Input placeholder="https://example.com/image.jpg" {...field} />
+                              </FormControl>
+                              
+                              {/* File Upload Section */}
+                              <div className="grid gap-2">
+                                <label 
+                                  htmlFor="image-upload" 
+                                  className="text-sm font-medium leading-none cursor-pointer">
+                                    Or upload an image:
+                                </label>
+                                <input
+                                  id="image-upload"
+                                  type="file"
+                                  accept="image/jpeg,image/png,image/gif"
+                                  className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                                  onChange={async (e) => {
+                                    const file = e.target.files?.[0];
+                                    if (file) {
+                                      // Create form data for the upload
+                                      const formData = new FormData();
+                                      formData.append("image", file);
+                                      
+                                      try {
+                                        // Upload the image
+                                        const response = await fetch("/api/upload", {
+                                          method: "POST",
+                                          body: formData,
+                                          credentials: "include"
+                                        });
+                                        
+                                        if (!response.ok) {
+                                          throw new Error("Failed to upload image");
+                                        }
+                                        
+                                        const data = await response.json();
+                                        
+                                        // Update the coverImage field with the URL returned from the server
+                                        field.onChange(data.imageUrl);
+                                        
+                                        // Display success message
+                                        toast({
+                                          title: "Image uploaded",
+                                          description: "The image has been uploaded successfully.",
+                                        });
+                                      } catch (error) {
+                                        console.error("Error uploading image:", error);
+                                        toast({
+                                          title: "Upload failed",
+                                          description: error instanceof Error ? error.message : "Failed to upload image",
+                                          variant: "destructive",
+                                        });
+                                      }
+                                    }
+                                  }}
+                                />
+                              </div>
+                              
+                              {/* Image Preview */}
+                              {field.value && (
+                                <div className="mt-2">
+                                  <p className="text-sm font-medium mb-2">Preview:</p>
+                                  <div className="rounded-md overflow-hidden border border-border w-full max-w-sm h-40 bg-muted">
+                                    <img 
+                                      src={field.value} 
+                                      alt="Cover preview" 
+                                      className="w-full h-full object-cover" 
+                                      onError={(e) => {
+                                        // Hide broken images
+                                        (e.target as HTMLImageElement).style.display = 'none';
+                                      }}
+                                    />
+                                  </div>
+                                </div>
+                              )}
+                            </div>
                             <FormDescription>
                               URL to the main image for this post
                             </FormDescription>

@@ -2,8 +2,8 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { useAuth } from "@/hooks/use-auth";
-import { Redirect } from "wouter";
-import { useState } from "react";
+import { Redirect, useLocation } from "wouter";
+import { useState, useEffect } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import {
@@ -38,11 +38,21 @@ type RegisterFormValues = z.infer<typeof registerSchema>;
 export default function AuthPage() {
   const { user, loginMutation, registerMutation } = useAuth();
   const [activeTab, setActiveTab] = useState<string>("login");
+  const [, navigate] = useLocation();
 
-  // Redirect if already logged in
-  if (user) {
-    return <Redirect to="/admin" />;
-  }
+  // Check login/registration status and redirect when successful
+  useEffect(() => {
+    if (user) {
+      navigate("/admin");
+    }
+  }, [user, navigate]);
+
+  // Effect to handle mutation success
+  useEffect(() => {
+    if (loginMutation.isSuccess || registerMutation.isSuccess) {
+      navigate("/admin");
+    }
+  }, [loginMutation.isSuccess, registerMutation.isSuccess, navigate]);
 
   const loginForm = useForm<LoginFormValues>({
     resolver: zodResolver(loginSchema),

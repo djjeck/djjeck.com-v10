@@ -7,7 +7,6 @@ describe('BlogPostCard component', () => {
   const mockAuthor: Author = {
     id: 1,
     name: 'John Doe',
-    email: 'john@example.com',
     bio: 'A tech enthusiast',
     avatarUrl: 'https://example.com/avatar.jpg',
   };
@@ -17,6 +16,7 @@ describe('BlogPostCard component', () => {
     slug: 'technology',
     name: 'Technology',
     description: 'All about tech',
+    image: 'https://example.com/category.jpg',
   };
 
   const mockPost: Post = {
@@ -28,9 +28,10 @@ describe('BlogPostCard component', () => {
     isFeatured: false,
     authorId: 1,
     categoryId: 1,
-    imageUrl: 'https://example.com/image.jpg',
+    coverImage: 'https://example.com/image.jpg',
     readTime: 5,
     publishedAt: new Date().toISOString(),
+    tags: ['react', 'typescript'],
     author: mockAuthor,
     category: mockCategory,
   };

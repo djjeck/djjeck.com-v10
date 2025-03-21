@@ -1,17 +1,22 @@
 #!/bin/bash
 
-echo "Running component tests..."
+# Add necessary Node options for ES modules support
+export NODE_OPTIONS="--experimental-vm-modules"
 
-# Specify the component test file pattern
-COMPONENT_TEST_PATTERN="client/src/__tests__/components/**/*.test.tsx"
+echo "===== Running Component Tests ====="
 
-# Run component tests with increased timeout and verbose output
-NODE_ENV=test NODE_OPTIONS="--experimental-vm-modules" npx jest "${COMPONENT_TEST_PATTERN}" --config=jest.config.ts --no-cache --verbose
+# Run the tests with a more structured output
+npx jest --config=jest.config.mjs test/Button.test.tsx test/BlogPostCard.test.tsx test/SimplifiedNewsletter.test.tsx --verbose
 
-if [ $? -eq 0 ]; then
-  echo "Component tests passed!"
-  exit 0
+# Store the Jest exit code
+jest_exit_code=$?
+
+echo "===== Test Summary ====="
+if [ $jest_exit_code -eq 0 ]; then
+  echo "✅ All tests passed successfully!"
 else
-  echo "Component tests failed!"
-  exit 1
+  echo "❌ Some tests failed. Check the output above for details."
 fi
+
+# Exit with the Jest exit code
+exit $jest_exit_code

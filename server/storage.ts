@@ -17,6 +17,7 @@ import { eq, desc } from "drizzle-orm";
 import * as schema from "@shared/schema";
 import session from "express-session";
 import connectPg from "connect-pg-simple";
+import createMemoryStore from "memorystore";
 import { pool } from "./db";
 
 const PostgresSessionStore = connectPg(session);
@@ -57,19 +58,31 @@ export class MemStorage implements IStorage {
   private posts: Map<number, Post>;
   private categories: Map<number, Category>;
   private authors: Map<number, Author>;
+  private users: Map<number, User>;
   
   private postIdCounter: number;
   private categoryIdCounter: number;
   private authorIdCounter: number;
+  private userIdCounter: number;
+  
+  sessionStore: session.Store;
   
   constructor() {
     this.posts = new Map();
     this.categories = new Map();
     this.authors = new Map();
+    this.users = new Map();
     
     this.postIdCounter = 1;
     this.categoryIdCounter = 1;
     this.authorIdCounter = 1;
+    this.userIdCounter = 1;
+    
+    // Create session store
+    const MemoryStore = createMemoryStore(session);
+    this.sessionStore = new MemoryStore({
+      checkPeriod: 86400000 // 1 day in ms
+    });
     
     // Initialize with sample data
     // We need to use a Promise here since constructors can't be async
@@ -562,6 +575,47 @@ While React SPAs present unique SEO challenges, implementing server-side renderi
     
     this.authors.set(id, author);
     return author;
+  }
+  
+  // Update post
+  async updatePost(id: number, post: Partial<InsertPost>): Promise<Post | undefined> {
+    const existingPost = this.posts.get(id);
+    if (!existingPost) return undefined;
+    
+    const updatedPost = { ...existingPost, ...post };
+    this.posts.set(id, updatedPost);
+    
+    return this.populatePostRelations(updatedPost);
+  }
+  
+  // Delete post
+  async deletePost(id: number): Promise<boolean> {
+    if (!this.posts.has(id)) return false;
+    return this.posts.delete(id);
+  }
+  
+  // User methods
+  async getUser(id: number): Promise<User | undefined> {
+    return this.users.get(id);
+  }
+  
+  async getUserByUsername(username: string): Promise<User | undefined> {
+    return Array.from(this.users.values()).find(
+      user => user.username === username
+    );
+  }
+  
+  async createUser(insertUser: InsertUser): Promise<User> {
+    const id = this.userIdCounter++;
+    
+    const user: User = {
+      id,
+      username: insertUser.username,
+      password: insertUser.password
+    };
+    
+    this.users.set(id, user);
+    return user;
   }
   
   // Helper methods
@@ -1180,6 +1234,69 @@ While React SPAs present unique SEO challenges, implementing server-side renderi
       return author;
     } catch (error) {
       console.error("Error creating author:", error);
+      throw error;
+    }
+  }
+  
+  // Update post
+  async updatePost(id: number, post: Partial<InsertPost>): Promise<Post | undefined> {
+    try {
+      const [updatedPost] = await db.update(posts)
+        .set(post)
+        .where(eq(posts.id, id))
+        .returning();
+      
+      if (!updatedPost) return undefined;
+      
+      // Get the full post with relations
+      return await this.getPostById(updatedPost.id);
+    } catch (error) {
+      console.error(`Error updating post with ID ${id}:`, error);
+      return undefined;
+    }
+  }
+  
+  // Delete post
+  async deletePost(id: number): Promise<boolean> {
+    try {
+      await db.delete(posts).where(eq(posts.id, id));
+      return true;
+    } catch (error) {
+      console.error(`Error deleting post with ID ${id}:`, error);
+      return false;
+    }
+  }
+  
+  // User methods
+  async getUser(id: number): Promise<User | undefined> {
+    try {
+      const [user] = await db.select().from(users).where(eq(users.id, id));
+      return user;
+    } catch (error) {
+      console.error(`Error getting user with ID ${id}:`, error);
+      return undefined;
+    }
+  }
+  
+  async getUserByUsername(username: string): Promise<User | undefined> {
+    try {
+      const [user] = await db.select().from(users).where(eq(users.username, username));
+      return user;
+    } catch (error) {
+      console.error(`Error getting user with username ${username}:`, error);
+      return undefined;
+    }
+  }
+  
+  async createUser(user: InsertUser): Promise<User> {
+    try {
+      const [newUser] = await db.insert(users)
+        .values(user)
+        .returning();
+      
+      return newUser;
+    } catch (error) {
+      console.error("Error creating user:", error);
       throw error;
     }
   }

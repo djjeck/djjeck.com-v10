@@ -8,8 +8,19 @@ import {
   insertContactFormSchema
 } from "@shared/schema";
 import { z } from "zod";
+import { setupAuth } from "./auth";
+import path from "path";
+import fs from "fs";
 
 export async function registerRoutes(app: Express): Promise<Server> {
+  // Setup authentication and protected routes
+  setupAuth(app);
+  
+  // Make sure uploads directory exists
+  const uploadsDir = path.join(process.cwd(), 'public', 'uploads');
+  if (!fs.existsSync(uploadsDir)) {
+    fs.mkdirSync(uploadsDir, { recursive: true });
+  }
   // API Routes
   app.get("/api/posts", async (req, res) => {
     try {

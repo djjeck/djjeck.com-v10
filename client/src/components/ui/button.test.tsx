@@ -42,6 +42,7 @@ describe('Button', () => {
   it('renders disabled state', () => {
     render(<Button disabled>Disabled</Button>);
     expect(screen.getByRole('button')).toBeDisabled();
-    expect(screen.getByRole('button')).toHaveClass('opacity-50 pointer-events-none');
+    expect(screen.getByRole('button')).toHaveClass('disabled:opacity-50');
+    expect(screen.getByRole('button')).toHaveClass('disabled:pointer-events-none');
   });
 });

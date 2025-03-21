@@ -13,6 +13,8 @@ import Footer from "@/components/Footer";
 import { AuthProvider } from "@/hooks/use-auth";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { Toaster } from "@/components/ui/toaster";
+import { Button } from "@/components/ui/button";
+import { useNavigate } from "wouter";
 
 function Router() {
   return (

@@ -1,5 +1,5 @@
 // This file contains utilities for Storybook integration
-import React from "react";
+import * as React from "react";
 import type { ComponentProps, ComponentType } from "react";
 
 /**

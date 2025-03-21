@@ -1,4 +1,4 @@
-import React from "react";
+import * as React from "react";
 import type { Meta, StoryObj } from "@storybook/react";
 import { Button } from "../../client/src/components/ui/button";
 import { createTemplate } from "../../client/src/lib/storybook";
@@ -20,7 +20,7 @@ const meta: Meta<typeof Button> = {
 export default meta;
 type Story = StoryObj<typeof Button>;
 
-const Template = (args: React.ComponentProps<typeof Button>) => <Button {...args} />;
+const Template = (args: React.ComponentProps<typeof Button>) => React.createElement(Button, args);
 
 export const Primary: Story = {
   render: Template,
@@ -73,25 +73,27 @@ export const Link: Story = {
 export const WithIcon: Story = {
   render: Template,
   args: {
-    children: (
-      <>
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          width="24"
-          height="24"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="2"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          className="mr-2 h-4 w-4"
-        >
-          <path d="M5 12h14" />
-          <path d="m12 5 7 7-7 7" />
-        </svg>
-        Button with Icon
-      </>
+    children: React.createElement(
+      React.Fragment,
+      null,
+      React.createElement(
+        "svg",
+        {
+          xmlns: "http://www.w3.org/2000/svg",
+          width: "24",
+          height: "24",
+          viewBox: "0 0 24 24",
+          fill: "none",
+          stroke: "currentColor",
+          strokeWidth: "2",
+          strokeLinecap: "round",
+          strokeLinejoin: "round",
+          className: "mr-2 h-4 w-4"
+        },
+        React.createElement("path", { d: "M5 12h14" }),
+        React.createElement("path", { d: "m12 5 7 7-7 7" })
+      ),
+      "Button with Icon"
     ),
     variant: "default",
   }

@@ -5,7 +5,8 @@ import {
   insertPostSchema, 
   insertCategorySchema, 
   insertAuthorSchema,
-  insertContactFormSchema
+  insertContactFormSchema,
+  insertPostImageSchema
 } from "@shared/schema";
 import { z } from "zod";
 import { setupAuth, upload } from "./auth";
@@ -305,6 +306,87 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error fetching authors:", error);
       res.status(500).json({ message: "Failed to fetch authors" });
+    }
+  });
+  
+  // Post image routes
+  
+  // Get images for a specific post
+  app.get("/api/posts/:postId/images", async (req, res) => {
+    try {
+      const postId = parseInt(req.params.postId);
+      const images = await storage.getPostImages(postId);
+      res.json(images);
+    } catch (error) {
+      console.error("Error fetching post images:", error);
+      res.status(500).json({ message: "Failed to fetch post images" });
+    }
+  });
+  
+  // Create a new post image (protected)
+  app.post("/api/posts/:postId/images", isAuthenticated, async (req, res) => {
+    try {
+      const postId = parseInt(req.params.postId);
+      const post = await storage.getPostById(postId);
+      
+      if (!post) {
+        return res.status(404).json({ message: "Post not found" });
+      }
+      
+      const imageData = insertPostImageSchema.parse({
+        ...req.body,
+        postId
+      });
+      
+      const newImage = await storage.createPostImage(imageData);
+      res.status(201).json(newImage);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ errors: error.errors });
+      }
+      
+      console.error("Error creating post image:", error);
+      res.status(500).json({ message: "Failed to create post image" });
+    }
+  });
+  
+  // Update a post image (protected)
+  app.patch("/api/post-images/:id", isAuthenticated, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const imageData = insertPostImageSchema.partial().parse(req.body);
+      
+      const updatedImage = await storage.updatePostImage(id, imageData);
+      
+      if (!updatedImage) {
+        return res.status(404).json({ message: "Post image not found" });
+      }
+      
+      res.json(updatedImage);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ errors: error.errors });
+      }
+      
+      console.error("Error updating post image:", error);
+      res.status(500).json({ message: "Failed to update post image" });
+    }
+  });
+  
+  // Delete a post image (protected)
+  app.delete("/api/post-images/:id", isAuthenticated, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const success = await storage.deletePostImage(id);
+      
+      if (success) {
+        res.status(200).json({ message: "Post image deleted successfully" });
+      } else {
+        res.status(500).json({ message: "Failed to delete post image" });
+      }
+    } catch (error) {
+      console.error("Error deleting post image:", error);
+      res.status(500).json({ message: "Failed to delete post image" });
     }
   });
 

@@ -1,4 +1,5 @@
 import { useQuery, useMutation } from "@tanstack/react-query";
+import { useState, useEffect } from "react";
 import { useAuth } from "@/hooks/use-auth";
 import { Redirect, useParams, useLocation } from "wouter";
 import { useForm } from "react-hook-form";
@@ -26,7 +27,8 @@ import {
 } from "@/components/ui/select";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
-import { insertPostSchema, Post, Category, Author } from "@shared/schema";
+import { insertPostSchema, Post, Category, Author, PostImage } from "@shared/schema";
+import MultiImageUploader from "@/components/MultiImageUploader";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
@@ -48,6 +50,7 @@ export default function PostEditor() {
   const isEditing = !!postId;
   const [, navigate] = useLocation();
   const { toast } = useToast();
+  const [postImages, setPostImages] = useState<PostImage[]>([]);
 
   // Redirect if not logged in
   if (!user) {
@@ -64,6 +67,24 @@ export default function PostEditor() {
     },
     enabled: isEditing,
   });
+  
+  // Fetch post images if in edit mode
+  const { data: fetchedImages, isLoading: isLoadingImages } = useQuery<PostImage[]>({
+    queryKey: ["/api/posts", postId, "images"],
+    queryFn: async () => {
+      if (!postId) return [];
+      const res = await apiRequest("GET", `/api/posts/${postId}/images`);
+      return res.json();
+    },
+    enabled: isEditing
+  });
+  
+  // Set post images when fetched images are loaded
+  useEffect(() => {
+    if (fetchedImages && fetchedImages.length > 0) {
+      setPostImages(fetchedImages);
+    }
+  }, [fetchedImages]);
 
   // Fetch categories
   const { data: categories, isLoading: isLoadingCategories } = useQuery<Category[]>({

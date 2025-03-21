@@ -3,6 +3,7 @@ import { Post } from "@shared/schema";
 import MarkdownRenderer from "@/lib/MarkdownRenderer";
 import { Badge } from "@/components/ui/badge";
 import { Calendar, Clock, User } from "lucide-react";
+import ImageCarousel from "./ImageCarousel";
 
 interface ExpandedBlogPostProps {
   post: Post;
@@ -54,8 +55,10 @@ const ExpandedBlogPost = ({ post }: ExpandedBlogPostProps) => {
         </div>
       </header>
       
-      {/* Cover image */}
-      {post.coverImage && (
+      {/* Post images carousel */}
+      {post.images && post.images.length > 0 ? (
+        <ImageCarousel images={post.images} altText={post.title} />
+      ) : post.coverImage ? (
         <div className="my-6">
           <img 
             src={post.coverImage} 
@@ -63,7 +66,7 @@ const ExpandedBlogPost = ({ post }: ExpandedBlogPostProps) => {
             className="w-full h-auto rounded-lg object-cover" 
           />
         </div>
-      )}
+      ) : null}
       
       {/* Excerpt for preview */}
       <div className="text-gray-600 text-lg mb-4">

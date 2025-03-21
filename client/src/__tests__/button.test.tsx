@@ -1,6 +1,7 @@
 import React from 'react';
 import { render, screen } from '@testing-library/react';
-import { Button } from '../components/ui/button';
+// Import with explicit file extension to avoid path resolution issues
+import { Button } from '../components/ui/button.tsx';
 
 describe('Button Component', () => {
   it('renders with default variant', () => {

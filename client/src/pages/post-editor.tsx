@@ -141,8 +141,49 @@ export default function PostEditor() {
         return res.json();
       }
     },
-    onSuccess: () => {
+    onSuccess: async (createdPost: Post) => {
       queryClient.invalidateQueries({ queryKey: ["/api/posts"] });
+      
+      // Handle saving the post images
+      if (postImages.length > 0) {
+        try {
+          // First, process images without IDs (new uploads)
+          const newImages = postImages.filter(img => !img.id || img.id === 0);
+          const existingImages = postImages.filter(img => img.id > 0);
+          
+          // Save new images
+          for (const image of newImages) {
+            await apiRequest("POST", `/api/posts/${createdPost.id}/images`, {
+              ...image,
+              postId: createdPost.id
+            });
+          }
+          
+          // Update existing images (captions, display order)
+          for (const image of existingImages) {
+            await apiRequest("PATCH", `/api/posts/${createdPost.id}/images/${image.id}`, {
+              caption: image.caption,
+              displayOrder: image.displayOrder
+            });
+          }
+          
+          // Invalidate images queries
+          queryClient.invalidateQueries({ queryKey: ["/api/posts", createdPost.id, "images"] });
+          
+          toast({
+            title: "Images saved",
+            description: "Post images have been saved successfully."
+          });
+        } catch (error) {
+          console.error("Error saving post images:", error);
+          toast({
+            title: "Warning",
+            description: "Post was saved but there was an error saving some images.",
+            variant: "destructive"
+          });
+        }
+      }
+      
       toast({
         title: isEditing ? "Post updated" : "Post created",
         description: isEditing 
@@ -172,7 +213,7 @@ export default function PostEditor() {
     mutation.mutate(data);
   };
 
-  const isLoading = isLoadingPost || isLoadingCategories || isLoadingAuthors || mutation.isPending;
+  const isLoading = isLoadingPost || isLoadingCategories || isLoadingAuthors || isLoadingImages || mutation.isPending;
 
   return (
     <div className="min-h-screen bg-background">
@@ -466,6 +507,18 @@ export default function PostEditor() {
                           </FormItem>
                         )}
                       />
+                      
+                      {/* Additional Images Section */}
+                      <div className="space-y-3 pt-4">
+                        <div className="flex items-center justify-between">
+                          <h3 className="text-base font-medium">Additional Images</h3>
+                        </div>
+                        <MultiImageUploader
+                          postId={postId || undefined}
+                          initialImages={postImages}
+                          onChange={setPostImages}
+                        />
+                      </div>
                     </TabsContent>
                   </Tabs>
                   

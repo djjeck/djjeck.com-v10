@@ -1,13 +1,5 @@
+/** @type {import('jest').Config} */
 module.exports = {
-  transform: {
-    "^.+\\.(ts|tsx)$": "ts-jest"
-  },
-  testEnvironment: "jsdom",
-  setupFilesAfterEnv: ["@testing-library/jest-dom"],
-  moduleNameMapper: {
-    "\\.(css|less|scss)$": "identity-obj-proxy"
-  },
-  testTimeout: 10000,
-  extensionsToTreatAsEsm: ['.ts', '.tsx'],
-  moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'json', 'node']
+  testEnvironment: 'node',
+  verbose: true,
 };

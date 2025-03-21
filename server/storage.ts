@@ -7,10 +7,13 @@ import {
   Author,
   InsertUser,
   User,
+  InsertPostImage,
+  PostImage,
   posts,
   categories,
   authors,
-  users
+  users,
+  postImages
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc } from "drizzle-orm";
@@ -80,11 +83,13 @@ export class MemStorage implements IStorage {
     this.categories = new Map();
     this.authors = new Map();
     this.users = new Map();
+    this.postImages = new Map();
     
     this.postIdCounter = 1;
     this.categoryIdCounter = 1;
     this.authorIdCounter = 1;
     this.userIdCounter = 1;
+    this.postImageIdCounter = 1;
     
     // Create session store
     const MemoryStore = createMemoryStore(session);
@@ -99,6 +104,45 @@ export class MemStorage implements IStorage {
     })();
   }
 
+  // Post image methods
+  async getPostImages(postId: number): Promise<PostImage[]> {
+    return Array.from(this.postImages.values())
+      .filter(image => image.postId === postId)
+      .sort((a, b) => a.displayOrder - b.displayOrder);
+  }
+  
+  async createPostImage(postImage: InsertPostImage): Promise<PostImage> {
+    const id = this.postImageIdCounter++;
+    
+    const image: PostImage = {
+      id,
+      postId: postImage.postId,
+      imageUrl: postImage.imageUrl,
+      caption: postImage.caption || null,
+      displayOrder: postImage.displayOrder || 0
+    };
+    
+    this.postImages.set(id, image);
+    return image;
+  }
+  
+  async updatePostImage(id: number, postImage: Partial<InsertPostImage>): Promise<PostImage | undefined> {
+    const existingImage = this.postImages.get(id);
+    if (!existingImage) return undefined;
+    
+    const updatedImage = { ...existingImage, ...postImage };
+    this.postImages.set(id, updatedImage);
+    
+    return updatedImage;
+  }
+  
+  async deletePostImage(id: number): Promise<boolean> {
+    if (!this.postImages.has(id)) return false;
+    
+    this.postImages.delete(id);
+    return true;
+  }
+  
   // Initialize sample data
   private async initSampleData() {
     // Create authors

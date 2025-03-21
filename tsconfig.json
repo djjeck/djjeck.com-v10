@@ -1,20 +1,22 @@
 {
-  "include": ["client/src/**/*", "shared/**/*", "server/**/*", "stories/**/*", "client/src/__tests__/**/*"],
+  "include": ["client/src/**/*", "shared/**/*", "server/**/*", "stories/**/*", "client/src/__tests__/**/*", "jest.setup.ts"],
   "exclude": ["node_modules", "build", "dist"],
   "compilerOptions": {
     "incremental": true,
     "tsBuildInfoFile": "./node_modules/typescript/tsbuildinfo",
     "noEmit": true,
     "module": "ESNext",
+    "moduleResolution": "node",
+    "target": "ESNext",
     "strict": true,
     "lib": ["esnext", "dom", "dom.iterable"],
-    "jsx": "preserve",
+    "jsx": "react-jsx",
     "esModuleInterop": true,
     "skipLibCheck": true,
-    "allowImportingTsExtensions": true,
-    "moduleResolution": "bundler",
+    "allowSyntheticDefaultImports": true,
+    "resolveJsonModule": true,
     "baseUrl": ".",
-    "types": ["node", "vite/client", "@storybook/react", "jest", "@testing-library/jest-dom"],
+    "types": ["node", "vite/client", "jest", "@testing-library/jest-dom"],
     "paths": {
       "@/*": ["./client/src/*"],
       "@shared/*": ["./shared/*"]

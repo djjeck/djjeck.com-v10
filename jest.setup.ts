@@ -14,3 +14,6 @@ Object.defineProperty(window, 'matchMedia', {
     dispatchEvent: jest.fn(),
   })),
 });
+
+// Setup global mocks needed for tests with ESM
+global.jest = jest;

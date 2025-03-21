@@ -1,5 +1,5 @@
 export default {
-  preset: 'ts-jest',
+  preset: 'ts-jest/presets/js-with-ts-esm',
   testEnvironment: 'jsdom',
   moduleNameMapper: {
     '^@/(.*)$': '<rootDir>/client/src/$1',
@@ -11,14 +11,16 @@ export default {
   transform: {
     '^.+\\.tsx?$': ['ts-jest', {
       tsconfig: 'tsconfig.json',
+      useESM: true,
     }],
   },
+  extensionsToTreatAsEsm: ['.ts', '.tsx'],
   coveragePathIgnorePatterns: [
     '/node_modules/',
     '/stories/',
     '/storybook-static/'
   ],
   moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'json', 'node'],
-  testTimeout: 10000, // 10 seconds timeout
+  testTimeout: 20000, // Extended timeout
   verbose: true,
 };

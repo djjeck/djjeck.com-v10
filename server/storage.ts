@@ -16,7 +16,7 @@ import {
   postImages
 } from "@shared/schema";
 import { db } from "./db";
-import { eq, desc } from "drizzle-orm";
+import { eq, desc, asc } from "drizzle-orm";
 import * as schema from "@shared/schema";
 import session from "express-session";
 import connectPg from "connect-pg-simple";
@@ -106,9 +106,26 @@ export class MemStorage implements IStorage {
 
   // Post image methods
   async getPostImages(postId: number): Promise<PostImage[]> {
-    return Array.from(this.postImages.values())
-      .filter(image => image.postId === postId)
-      .sort((a, b) => a.displayOrder - b.displayOrder);
+    const images = Array.from(this.postImages.values())
+      .filter(image => image.postId === postId);
+      
+    // Handle potential null displayOrder values
+    return images.sort((a, b) => {
+      // If both have displayOrder, sort normally
+      if (a.displayOrder !== null && b.displayOrder !== null) {
+        return a.displayOrder - b.displayOrder;
+      }
+      // If a has displayOrder but b doesn't, a comes first
+      if (a.displayOrder !== null && b.displayOrder === null) {
+        return -1;
+      }
+      // If b has displayOrder but a doesn't, b comes first
+      if (a.displayOrder === null && b.displayOrder !== null) {
+        return 1;
+      }
+      // If both are null, maintain their relative position
+      return 0;
+    });
   }
   
   async createPostImage(postImage: InsertPostImage): Promise<PostImage> {
@@ -702,9 +719,26 @@ export class DatabaseStorage implements IStorage {
     try {
       const images = await db.query.postImages.findMany({
         where: eq(postImages.postId, postId),
-        orderBy: [postImages.displayOrder]
+        orderBy: [asc(postImages.displayOrder)]
       });
-      return images;
+      
+      // Handle potential null displayOrder values by sorting them at the end
+      return images.sort((a, b) => {
+        // If both have displayOrder, sort normally
+        if (a.displayOrder !== null && b.displayOrder !== null) {
+          return a.displayOrder - b.displayOrder;
+        }
+        // If a has displayOrder but b doesn't, a comes first
+        if (a.displayOrder !== null && b.displayOrder === null) {
+          return -1;
+        }
+        // If b has displayOrder but a doesn't, b comes first
+        if (a.displayOrder === null && b.displayOrder !== null) {
+          return 1;
+        }
+        // If both are null, maintain their relative position
+        return 0;
+      });
     } catch (error) {
       console.error(`Error getting images for post ${postId}:`, error);
       return [];

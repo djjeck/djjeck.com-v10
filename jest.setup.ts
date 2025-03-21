@@ -1,5 +1,8 @@
 import '@testing-library/jest-dom';
 
+// Fix for Jest in ESM mode
+import { jest } from '@jest/globals';
+
 // Mock matchMedia for components that might use media queries
 Object.defineProperty(window, 'matchMedia', {
   writable: true,

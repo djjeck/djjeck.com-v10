@@ -35,6 +35,9 @@ jobs:
         path: dist
         key: ${{ runner.os }}-build-${{ github.sha }}
 
+    - name: Run Storybook tests
+      run: npm run test 
+
     - name: Report status
       if: always()
       run: |

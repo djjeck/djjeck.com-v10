@@ -147,8 +147,8 @@ export default function PostEditor() {
       // Handle saving the post images
       if (postImages.length > 0) {
         try {
-          // First, process images without IDs (new uploads)
-          const newImages = postImages.filter(img => !img.id || img.id === 0);
+          // First, process images with negative IDs (new uploads)
+          const newImages = postImages.filter(img => !img.id || img.id < 0);
           const existingImages = postImages.filter(img => img.id > 0);
           
           // Save new images

@@ -333,8 +333,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Post not found" });
       }
       
+      // Remove any client-side ID (especially negative temporary IDs)
+      // and let the database generate a proper ID
+      const { id, ...imageDataWithoutId } = req.body;
+      
       const imageData = insertPostImageSchema.parse({
-        ...req.body,
+        ...imageDataWithoutId,
         postId
       });
       
@@ -360,8 +364,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Invalid post or image ID" });
       }
       
+      // Remove any client-side ID to avoid conflicts
+      const { id: clientId, ...imageDataWithoutId } = req.body;
+      
       const imageData = insertPostImageSchema.partial().parse({
-        ...req.body,
+        ...imageDataWithoutId,
         postId
       });
       
